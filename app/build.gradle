@@ -1,10 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-	compileSdkVersion versionCompiler
-	buildToolsVersion versionBuildTool
 
-	defaultConfig {
+	lintOptions {
+		abortOnError false
+	}
+
+	compileSdkVersion versionCompiler
+
+    defaultConfig {
 		minSdkVersion 18
 		targetSdkVersion versionTarget
 		versionCode 1
@@ -19,6 +23,7 @@ android {
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
+    buildToolsVersion '27.0.3'
 }
 
 dependencies {
