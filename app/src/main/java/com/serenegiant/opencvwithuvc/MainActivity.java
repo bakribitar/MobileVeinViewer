@@ -108,7 +108,7 @@ public final class MainActivity extends BaseActivity
 	/**
 	 * for camera preview display
 	 */
-	private UVCCameraTextureView mUVCCameraView;
+//	private UVCCameraTextureView mUVCCameraView;
 	/**
 	 * for display resulted images
  	 */
@@ -143,9 +143,9 @@ public final class MainActivity extends BaseActivity
 		mCaptureButton.setOnClickListener(mOnClickListener);
 		mCaptureButton.setVisibility(View.INVISIBLE);
 		
-		mUVCCameraView = (UVCCameraTextureView)findViewById(R.id.camera_view);
-		mUVCCameraView.setOnLongClickListener(mOnLongClickListener);
-		mUVCCameraView.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
+//		mUVCCameraView = (UVCCameraTextureView)findViewById(R.id.camera_view);
+//		mUVCCameraView.setOnLongClickListener(mOnLongClickListener);
+//		mUVCCameraView.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
 
 //		mResultView = (SurfaceView)findViewById(R.id.result_view);
 		
@@ -171,8 +171,8 @@ public final class MainActivity extends BaseActivity
 		mFpsTv.setTypeface(Typeface.MONOSPACE);
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
-		mCameraHandler = UVCCameraHandlerMultiSurface.createHandler(this, mUVCCameraView,
-			USE_SURFACE_ENCODER ? 0 : 1, PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE);
+//		mCameraHandler = UVCCameraHandlerMultiSurface.createHandler(this, mUVCCameraView,
+//			USE_SURFACE_ENCODER ? 0 : 1, PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE);
 	}
 
 	@Override
@@ -206,7 +206,7 @@ public final class MainActivity extends BaseActivity
 	        mUSBMonitor.destroy();
 	        mUSBMonitor = null;
         }
-        mUVCCameraView = null;
+//        mUVCCameraView = null;
         mCameraButton = null;
         mCaptureButton = null;
 		super.onDestroy();
@@ -263,24 +263,24 @@ public final class MainActivity extends BaseActivity
 		}
 	};
 
-	/**
-	 * capture still image when you long click on preview image(not on buttons)
-	 */
-	private final OnLongClickListener mOnLongClickListener = new OnLongClickListener() {
-		@Override
-		public boolean onLongClick(final View view) {
-			switch (view.getId()) {
-			case R.id.camera_view:
-				if (mCameraHandler.isOpened()) {
-					if (checkPermissionWriteExternalStorage()) {
-						mCameraHandler.captureStill();
-					}
-					return true;
-				}
-			}
-			return false;
-		}
-	};
+//	/**
+//	 * capture still image when you long click on preview image(not on buttons)
+//	 */
+//	private final OnLongClickListener mOnLongClickListener = new OnLongClickListener() {
+//		@Override
+//		public boolean onLongClick(final View view) {
+//			switch (view.getId()) {
+//			case R.id.camera_view:
+//				if (mCameraHandler.isOpened()) {
+//					if (checkPermissionWriteExternalStorage()) {
+//						mCameraHandler.captureStill();
+//					}
+//					return true;
+//				}
+//			}
+//			return false;
+//		}
+//	};
 
 	private void setCameraButton(final boolean isOn) {
 		if (DEBUG) Log.v(TAG, "setCameraButton:isOn=" + isOn);
@@ -306,18 +306,18 @@ public final class MainActivity extends BaseActivity
 	private int mPreviewSurfaceId;
 	private void startPreview() {
 		if (DEBUG) Log.v(TAG, "startPreview:");
-		mUVCCameraView.resetFps();
+//		mUVCCameraView.resetFps();
 		mCameraHandler.startPreview();
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					final SurfaceTexture st = mUVCCameraView.getSurfaceTexture();
-					if (st != null) {
-						final Surface surface = new Surface(st);
-						mPreviewSurfaceId = surface.hashCode();
-						mCameraHandler.addSurface(mPreviewSurfaceId, surface, false);
-					}
+//					final SurfaceTexture st = mUVCCameraView.getSurfaceTexture();
+//					if (st != null) {
+//						final Surface surface = new Surface(st);
+//						mPreviewSurfaceId = surface.hashCode();
+//						mCameraHandler.addSurface(mPreviewSurfaceId, surface, false);
+//					}
 					mCaptureButton.setVisibility(View.VISIBLE);
 //					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
 				} catch (final Exception e) {
@@ -603,12 +603,12 @@ public final class MainActivity extends BaseActivity
 		@Override
 		public void run() {
 			float srcFps, resultFps;
-			if (mUVCCameraView != null) {
-				mUVCCameraView.updateFps();
-				srcFps = mUVCCameraView.getFps();
-			} else {
+//			if (mUVCCameraView != null) {
+//				mUVCCameraView.updateFps();
+//				srcFps = mUVCCameraView.getFps();
+//			} else {
 				srcFps = 0.0f;
-			}
+//			}
 			if (mImageProcessor != null) {
 				mImageProcessor.updateFps();
 				resultFps = mImageProcessor.getFps();
