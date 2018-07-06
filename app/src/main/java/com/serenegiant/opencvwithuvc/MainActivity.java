@@ -112,7 +112,7 @@ public final class MainActivity extends BaseActivity
 	/**
 	 * for display resulted images
  	 */
-	protected SurfaceView mResultView;
+//	protected SurfaceView mResultView;
 	/**
 	 * for open&start / stop&close camera preview
 	 */
@@ -147,7 +147,7 @@ public final class MainActivity extends BaseActivity
 		mUVCCameraView.setOnLongClickListener(mOnLongClickListener);
 		mUVCCameraView.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
 
-		mResultView = (SurfaceView)findViewById(R.id.result_view);
+//		mResultView = (SurfaceView)findViewById(R.id.result_view);
 		
 		mBrightnessButton = findViewById(R.id.brightness_button);
 		mBrightnessButton.setOnClickListener(mOnClickListener);
@@ -319,7 +319,7 @@ public final class MainActivity extends BaseActivity
 						mCameraHandler.addSurface(mPreviewSurfaceId, surface, false);
 					}
 					mCaptureButton.setVisibility(View.VISIBLE);
-					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+//					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
 				} catch (final Exception e) {
 					Log.w(TAG, e);
 				}
@@ -330,7 +330,7 @@ public final class MainActivity extends BaseActivity
 
 	private void stopPreview() {
 		if (DEBUG) Log.v(TAG, "stopPreview:");
-		stopImageProcessor();
+//		stopImageProcessor();
 		if (mPreviewSurfaceId != 0) {
 			mCameraHandler.removeSurface(mPreviewSurfaceId);
 			mPreviewSurfaceId = 0;
@@ -629,96 +629,96 @@ public final class MainActivity extends BaseActivity
 	 * @param processing_width
 	 * @param processing_height
 	 */
-	protected void startImageProcessor(final int processing_width, final int processing_height) {
-		if (DEBUG) Log.v(TAG, "startImageProcessor:");
-		mIsRunning = true;
-		if (mImageProcessor == null) {
-			mImageProcessor = new ImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT,	// src size
-				new MyImageProcessorCallback(processing_width, processing_height));	// processing size
-			mImageProcessor.start(processing_width, processing_height);	// processing size
-			final Surface surface = mImageProcessor.getSurface();
-			mImageProcessorSurfaceId = surface != null ? surface.hashCode() : 0;
-			if (mImageProcessorSurfaceId != 0) {
-				mCameraHandler.addSurface(mImageProcessorSurfaceId, surface, false);
-			}
-		}
-	}
-	
+//	protected void startImageProcessor(final int processing_width, final int processing_height) {
+//		if (DEBUG) Log.v(TAG, "startImageProcessor:");
+//		mIsRunning = true;
+//		if (mImageProcessor == null) {
+//			mImageProcessor = new ImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT,	// src size
+//				new MyImageProcessorCallback(processing_width, processing_height));	// processing size
+//			mImageProcessor.start(processing_width, processing_height);	// processing size
+//			final Surface surface = mImageProcessor.getSurface();
+//			mImageProcessorSurfaceId = surface != null ? surface.hashCode() : 0;
+//			if (mImageProcessorSurfaceId != 0) {
+//				mCameraHandler.addSurface(mImageProcessorSurfaceId, surface, false);
+//			}
+//		}
+//	}
+
 	/**
 	 * stop image processing
 	 */
-	protected void stopImageProcessor() {
-		if (DEBUG) Log.v(TAG, "stopImageProcessor:");
-		if (mImageProcessorSurfaceId != 0) {
-			mCameraHandler.removeSurface(mImageProcessorSurfaceId);
-			mImageProcessorSurfaceId = 0;
-		}
-		if (mImageProcessor != null) {
-			mImageProcessor.release();
-			mImageProcessor = null;
-		}
-	}
+//	protected void stopImageProcessor() {
+//		if (DEBUG) Log.v(TAG, "stopImageProcessor:");
+//		if (mImageProcessorSurfaceId != 0) {
+//			mCameraHandler.removeSurface(mImageProcessorSurfaceId);
+//			mImageProcessorSurfaceId = 0;
+//		}
+//		if (mImageProcessor != null) {
+//			mImageProcessor.release();
+//			mImageProcessor = null;
+//		}
+//	}
 	
 	/**
 	 * callback listener from `ImageProcessor`
 	 */
-	protected class MyImageProcessorCallback implements ImageProcessor.ImageProcessorCallback {
-		private final int width, height;
-		private final Matrix matrix = new Matrix();
-		private Bitmap mFrame;
-		protected MyImageProcessorCallback(
-			final int processing_width, final int processing_height) {
-			
-			width = processing_width;
-			height = processing_height;
-		}
+//	protected class MyImageProcessorCallback implements ImageProcessor.ImageProcessorCallback {
+//		private final int width, height;
+//		private final Matrix matrix = new Matrix();
+//		private Bitmap mFrame;
+//		protected MyImageProcessorCallback(
+//			final int processing_width, final int processing_height) {
+//
+//			width = processing_width;
+//			height = processing_height;
+//		}
 
-		@Override
-		public void onFrame(final ByteBuffer frame) {
-			if (mResultView != null) {
-				final SurfaceHolder holder = mResultView.getHolder();
-				if ((holder == null)
-					|| (holder.getSurface() == null)
-					|| (frame == null)) return;
+//		@Override
+//		public void onFrame(final ByteBuffer frame) {
+//			if (mResultView != null) {
+//				final SurfaceHolder holder = mResultView.getHolder();
+//				if ((holder == null)
+//					|| (holder.getSurface() == null)
+//					|| (frame == null)) return;
+//
+////--------------------------------------------------------------------------------
+//// Using SurfaceView and Bitmap to draw resulted images is inefficient way,
+//// but functions onOpenCV are relatively heavy and expect slower than source
+//// frame rate. So currently just use the way to simply this sample app.
+//// If you want to use much efficient way, try to use as same way as
+//// UVCCamera class use to receive images from UVC camera.
+////--------------------------------------------------------------------------------
+//				if (mFrame == null) {
+//					mFrame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//					final float scaleX = mResultView.getWidth() / (float)width;
+//					final float scaleY = mResultView.getHeight() / (float)height;
+//					matrix.reset();
+//					matrix.postScale(scaleX, scaleY);
+//				}
+//				try {
+//					frame.clear();
+//					mFrame.copyPixelsFromBuffer(frame);
+//					final Canvas canvas = holder.lockCanvas();
+//					if (canvas != null) {
+//						try {
+//							canvas.drawBitmap(mFrame, matrix, null);
+//						} catch (final Exception e) {
+//							Log.w(TAG, e);
+//						} finally {
+//							holder.unlockCanvasAndPost(canvas);
+//						}
+//					}
+//				} catch (final Exception e) {
+//					Log.w(TAG, e);
+//				}
+//			}
+//		}
 
-//--------------------------------------------------------------------------------
-// Using SurfaceView and Bitmap to draw resulted images is inefficient way,
-// but functions onOpenCV are relatively heavy and expect slower than source
-// frame rate. So currently just use the way to simply this sample app.
-// If you want to use much efficient way, try to use as same way as
-// UVCCamera class use to receive images from UVC camera.
-//--------------------------------------------------------------------------------
-				if (mFrame == null) {
-					mFrame = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-					final float scaleX = mResultView.getWidth() / (float)width;
-					final float scaleY = mResultView.getHeight() / (float)height;
-					matrix.reset();
-					matrix.postScale(scaleX, scaleY);
-				}
-				try {
-					frame.clear();
-					mFrame.copyPixelsFromBuffer(frame);
-					final Canvas canvas = holder.lockCanvas();
-					if (canvas != null) {
-						try {
-							canvas.drawBitmap(mFrame, matrix, null);
-						} catch (final Exception e) {
-							Log.w(TAG, e);
-						} finally {
-							holder.unlockCanvasAndPost(canvas);
-						}
-					}
-				} catch (final Exception e) {
-					Log.w(TAG, e);
-				}
-			}
-		}
-
-		@Override
-		public void onResult(final int type, final float[] result) {
-			// do something
-		}
+//		@Override
+//		public void onResult(final int type, final float[] result) {
+//			// do something
+//		}
 		
 	}
 
-}
+
