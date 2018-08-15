@@ -72,6 +72,8 @@ public final class MainActivity extends BaseActivity
      */
     private static final int PREVIEW_MODE = 1;
 
+	private static int BRIGHTNESS_DEFAULT = 50;
+	private static int CONTRAST_DEFAULT = 50;
 	protected static final int SETTINGS_HIDE_DELAY_MS = 2500;
 
 	/**
@@ -443,6 +445,7 @@ public final class MainActivity extends BaseActivity
 		if (isActive()) {
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_BRIGHTNESS));
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_CONTRAST));
+				mResetButton.setVisibility(View.INVISIBLE);
 		}
 		ViewAnimationHelper.fadeOut(mValueLayout, -1, 0, mViewAnimationListener);
 	}
@@ -502,9 +505,14 @@ public final class MainActivity extends BaseActivity
 			if (isActive() && checkSupportFlag(mSettingMode)) {
 				switch (mSettingMode) {
 				case UVCCamera.PU_BRIGHTNESS:
-				case UVCCamera.PU_CONTRAST:
+				case UVCCamera.PU_CONTRAST: {
 					setValue(mSettingMode, seekBar.getProgress());
+					if(getValue(UVCCamera.PU_BRIGHTNESS) !=BRIGHTNESS_DEFAULT || getValue(UVCCamera.PU_CONTRAST)!=CONTRAST_DEFAULT)
+						mResetButton.setVisibility(View.VISIBLE);
+					else
+						mResetButton.setVisibility(View.INVISIBLE);
 					break;
+				}
 				}
 			}	// if (active)
 		}
