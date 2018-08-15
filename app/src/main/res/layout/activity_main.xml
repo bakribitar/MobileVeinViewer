@@ -1,31 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~  UVCCamera
-  ~  library and sample to access to UVC web camera on non-rooted Android device
-  ~
-  ~ Copyright (c) 2014-2018 saki t_saki@serenegiant.com
-  ~
-  ~  Licensed under the Apache License, Version 2.0 (the "License");
-  ~  you may not use this file except in compliance with the License.
-  ~   You may obtain a copy of the License at
-  ~
-  ~      http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~   Unless required by applicable law or agreed to in writing, software
-  ~   distributed under the License is distributed on an "AS IS" BASIS,
-  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~   See the License for the specific language governing permissions and
-  ~   limitations under the License.
-  ~
-  ~  All files in the folder are under this Apache License, Version 2.0.
-  ~  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
-  ~  may have a different license, see the respective files.
-  -->
-<RelativeLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:id="@+id/RelativeLayout1"
-	android:layout_width="match_parent"
+	android:layout_width="wrap_content"
 	android:layout_height="match_parent"
 	android:background="#ff000000"
 	android:keepScreenOn="true"
@@ -37,7 +15,8 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_centerHorizontal="true"
-		android:layout_centerVertical="true"/>
+		android:layout_centerVertical="true"
+		android:visibility="invisible" />
 
 	<ImageView
 		android:id="@+id/frame_image"
@@ -47,23 +26,21 @@
 		android:layout_alignLeft="@+id/camera_view"
 		android:layout_alignRight="@+id/camera_view"
 		android:layout_alignTop="@+id/camera_view"
-		android:src="@drawable/border"/>
+		android:src="@drawable/border" />
 
 	<SurfaceView
 		android:id="@+id/result_view"
-		android:layout_width="320dp"
-		android:layout_height="240dp"
-		android:layout_alignRight="@+id/camera_view"
-		android:layout_alignBottom="@+id/camera_view"
-		android:layout_marginRight="5dp"
-		android:layout_marginBottom="5dp"/>
+		android:layout_width="333dp"
+		android:layout_height="258dp"
+		android:layout_centerInParent="true" />
+
 	<ToggleButton
 		android:id="@+id/camera_button"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignBottom="@id/camera_view"
 		android:layout_alignLeft="@id/camera_view"
-		android:text="ToggleButton"/>
+		android:text="ToggleButton" />
 
 	<ImageButton
 		android:id="@+id/capture_button"
@@ -74,29 +51,42 @@
 		android:layout_marginBottom="6dp"
 		android:background="@null"
 		android:scaleType="centerCrop"
-		android:src="@android:drawable/ic_menu_camera"/>
+		android:src="@android:drawable/ic_menu_camera" />
 
 	<TextView
+		android:id="@+id/cpu_load_textview"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		tools:text="cpu:100/100/100"
-		android:id="@+id/cpu_load_textview"
-		android:layout_alignTop="@+id/camera_view"
 		android:layout_alignLeft="@+id/camera_view"
+		android:layout_alignTop="@+id/camera_view"
 		android:gravity="center_vertical"
+		android:textColor="@color/RED"
 		android:textSize="@dimen/text_sz_cpu_load"
-		android:textColor="@color/RED"/>
+		android:visibility="invisible"
+		tools:text="cpu:100/100/100" />
 
 	<TextView
 		android:id="@+id/fps_textview"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:gravity="center_horizontal"
-		android:textSize="@dimen/text_sz_fps"
-		android:textColor="@color/RED"
-		android:layout_below="@+id/cpu_load_textview"
 		android:layout_alignLeft="@+id/camera_view"
-		tools:text="15.3/30.0"/>
+		android:layout_below="@+id/cpu_load_textview"
+		android:gravity="center_horizontal"
+		android:textColor="@color/RED"
+		android:textSize="@dimen/text_sz_fps"
+		android:visibility="invisible"
+		tools:text="15.3/30.0" />
+
+	<Button
+		android:id="@+id/reset_button"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentStart="true"
+		android:layout_alignParentTop="true"
+
+		android:scaleType="fitXY"
+		android:src="@mipmap/ic_launcher"
+		android:text="Reset" />
 
 	<RelativeLayout
 		android:id="@+id/tools_layout"
@@ -113,7 +103,7 @@
 			android:layout_centerVertical="true"
 			android:layout_marginLeft="@dimen/horizontal_margin_half"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:text="brightness"/>
+			android:text="brightness" />
 
 		<Button
 			android:id="@+id/contrast_button"
@@ -123,7 +113,7 @@
 			android:layout_marginLeft="@dimen/horizontal_margin_half"
 			android:layout_marginTop="@dimen/vertical_margin"
 			android:layout_toRightOf="@+id/brightness_button"
-			android:text="contrast"/>
+			android:text="contrast" />
 
 	</RelativeLayout>
 
@@ -131,27 +121,19 @@
 		android:id="@+id/value_layout"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_centerInParent="true"
 		android:layout_alignLeft="@id/camera_view"
 		android:layout_alignRight="@id/camera_view"
+		android:layout_centerInParent="true"
 		android:background="#22ffffff"
 		android:visibility="invisible">
-
-		<ImageButton
-			android:id="@+id/reset_button"
-			android:layout_width="@dimen/sz_icon_camera_ctrl"
-			android:layout_height="@dimen/sz_icon_camera_ctrl"
-			android:background="@null"
-			android:scaleType="fitXY"
-			android:src="@mipmap/ic_launcher"/>
 
 		<SeekBar
 			android:id="@+id/setting_seekbar"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_centerInParent="true"
-			android:layout_toRightOf="@+id/reset_button"
+			android:layout_alignParentStart="true"
+			android:layout_alignParentTop="true"
 			android:max="100"
-			android:progress="50"/>
+			android:progress="50" />
 	</RelativeLayout>
 </RelativeLayout>
