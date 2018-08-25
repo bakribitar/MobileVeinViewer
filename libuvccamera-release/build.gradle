@@ -4,7 +4,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 android {
 	compileSdkVersion versionCompiler
-	buildToolsVersion versionBuildTool
 
 	compileOptions {
 		sourceCompatibility javaSourceCompatibility
@@ -32,6 +31,7 @@ android {
 		abortOnError false
 	}
 
+	buildToolsVersion '27.0.3'
 }
 
 tasks.withType(JavaCompile) {
@@ -66,9 +66,9 @@ task ndkClean(type: Exec, description: 'clean JNI libraries') {
 clean.dependsOn 'ndkClean'
 
 dependencies {
-    compile fileTree(dir: new File(buildDir, 'libs'), include: '*.jar')
-	compile "com.android.support:support-annotations:${supportLibVersion}"
-	compile("com.serenegiant:common:${commonLibVersion}") {
+    api fileTree(dir: new File(buildDir, 'libs'), include: '*.jar')
+	api "com.android.support:support-annotations:${supportLibVersion}"
+	api ("com.serenegiant:common:${commonLibVersion}") {
 		exclude module: 'support-v4'
 	}
 }

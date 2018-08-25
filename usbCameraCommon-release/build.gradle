@@ -2,9 +2,8 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion versionCompiler
-   	buildToolsVersion versionBuildTool
 
-   	compileOptions {
+    compileOptions {
    		sourceCompatibility javaSourceCompatibility
    		targetCompatibility javaTargetCompatibility
    	}
@@ -20,12 +19,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildToolsVersion '27.0.3'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile("com.serenegiant:common:${commonLibVersion}") {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api("com.serenegiant:common:${commonLibVersion}") {
    		exclude module: 'support-v4'
    	}
-    compile project(':libuvccamera-release')
+    api project(':libuvccamera-release')
 }
