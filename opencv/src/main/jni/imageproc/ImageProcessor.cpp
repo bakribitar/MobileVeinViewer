@@ -199,10 +199,28 @@ void ImageProcessor::do_process(JNIEnv *env) {
 // for a sample, convert to gray scale and return it as rgba here now.
 				switch (result_frame_type) {
 				default:
+
 					// convert to gray scale(RGBA->Y)
 					cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
+
+				    	cv::Canny(src, result, 50, 200, 3);
+                    							// perform hough
+                    							std::vector<cv::Vec2f> lines;
+                    							cv::HoughLines(result, lines, 1, 1.7444444, 100, 0, 0 );
+                    								for( size_t i = 0; i < lines.size(); i++ )
+                    								{
+                    									float rho = lines[i][0], theta = lines[i][1];
+                    									cv::Point pt1, pt2;
+                    									double a = cos(theta), b = sin(theta);
+                    									double x0 = a*rho, y0 = b*rho;
+                    									pt1.x = cvRound(x0 + 1000*(-b));
+                    									pt1.y = cvRound(y0 + 1000*(a));
+                    									pt2.x = cvRound(x0 - 1000*(-b));
+                    									pt2.y = cvRound(y0 - 1000*(a));
+                    									cv::line( result, pt1, pt2, cv::Scalar(0,0,255), 3, CV_AA);
+                    								}
 					// convert gray scale to rgba(for callback)
-					cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
+					cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
 					break;
 				}
 				if (UNLIKELY(!mIsRunning)) break;
