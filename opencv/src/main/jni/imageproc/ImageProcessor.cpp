@@ -21,16 +21,16 @@
  * folder may have a different license, see the respective files.
 */
 
-#if 1	// set 0 to enable debug output, otherwise set 1
-	#ifndef LOG_NDEBUG
-		#define	LOG_NDEBUG		// disable LOGV/LOGD/MARK
-	#endif
-	#undef USE_LOGALL			// enable specific LOGx only
+#if 1    // set 0 to enable debug output, otherwise set 1
+#ifndef LOG_NDEBUG
+#define    LOG_NDEBUG        // disable LOGV/LOGD/MARK
+#endif
+#undef USE_LOGALL            // enable specific LOGx only
 #else
 //	#define USE_LOGALL
-	#define USE_LOGD
-	#undef LOG_NDEBUG
-	#undef NDEBUG
+#define USE_LOGD
+#undef LOG_NDEBUG
+#undef NDEBUG
 #endif
 
 #include <jni.h>
@@ -52,36 +52,35 @@ static fields_t fields;
 
 using namespace android;
 
-ImageProcessor::ImageProcessor(JNIEnv* env, jobject weak_thiz_obj, jclass clazz)
-:	mWeakThiz(env->NewGlobalRef(weak_thiz_obj)),
-	mClazz((jclass)env->NewGlobalRef(clazz)),
-	mIsRunning(false),
-	mResultFrameType(RESULT_FRAME_TYPE_DST_LINE)
-{
-	ENTER();
+ImageProcessor::ImageProcessor(JNIEnv *env, jobject weak_thiz_obj, jclass clazz)
+        : mWeakThiz(env->NewGlobalRef(weak_thiz_obj)),
+          mClazz((jclass) env->NewGlobalRef(clazz)),
+          mIsRunning(false),
+          mResultFrameType(RESULT_FRAME_TYPE_DST_LINE) {
+    ENTER();
 
-	EXIT();
+    EXIT();
 }
 
 ImageProcessor::~ImageProcessor() {
 }
 
 void ImageProcessor::release(JNIEnv *env) {
-	ENTER();
+    ENTER();
 
-	if (LIKELY(env)) {
-		if (mWeakThiz) {
-			env->DeleteGlobalRef(mWeakThiz);
-			mWeakThiz = NULL;
-		}
-		if (mClazz) {
-			env->DeleteGlobalRef(mClazz);
-			mClazz = NULL;
-		}
-	}
-	clearFrames();
+    if (LIKELY(env)) {
+        if (mWeakThiz) {
+            env->DeleteGlobalRef(mWeakThiz);
+            mWeakThiz = NULL;
+        }
+        if (mClazz) {
+            env->DeleteGlobalRef(mClazz);
+            mClazz = NULL;
+        }
+    }
+    clearFrames();
 
-	EXIT();
+    EXIT();
 }
 
 /**
@@ -89,22 +88,22 @@ void ImageProcessor::release(JNIEnv *env) {
  * This is called on gl context and you can execute OpenGL|ES functions
  */
 int ImageProcessor::start(const int &width, const int &height) {
-	ENTER();
-	int result = -1;
+    ENTER();
+    int result = -1;
 
-	if (!isRunning()) {
-		mMutex.lock();
-		{
-			initFrame(width, height);
-			mIsRunning = true;
-			result = pthread_create(&processor_thread, NULL, processor_thread_func, (void *)this);
-		}
-		mMutex.unlock();
-	} else {
-		LOGW("already running");
-	}
+    if (!isRunning()) {
+        mMutex.lock();
+        {
+            initFrame(width, height);
+            mIsRunning = true;
+            result = pthread_create(&processor_thread, NULL, processor_thread_func, (void *) this);
+        }
+        mMutex.unlock();
+    } else {
+        LOGW("already running");
+    }
 
-	RETURN(result, int);
+    RETURN(result, int);
 }
 
 /**
@@ -112,313 +111,334 @@ int ImageProcessor::start(const int &width, const int &height) {
  * This is called on gl context and you can execute OpenGL|ES functions
  */
 int ImageProcessor::stop() {
-	ENTER();
+    ENTER();
 
-	bool b = isRunning();
-	if (LIKELY(b)) {
-		mIsRunning = false;
-		releaseFrame();
-		mMutex.lock();
-		{
-			MARK("signal to processor thread");
-			mSync.broadcast();
-		}
-		mMutex.unlock();
-		MARK("wait for processing thread finishes");
-		if (pthread_join(processor_thread, NULL) != EXIT_SUCCESS) {
-			LOGW("terminate processor thread: pthread_join failed");
-		}
-	}
-	clearFrames();
+    bool b = isRunning();
+    if (LIKELY(b)) {
+        mIsRunning = false;
+        releaseFrame();
+        mMutex.lock();
+        {
+            MARK("signal to processor thread");
+            mSync.broadcast();
+        }
+        mMutex.unlock();
+        MARK("wait for processing thread finishes");
+        if (pthread_join(processor_thread, NULL) != EXIT_SUCCESS) {
+            LOGW("terminate processor thread: pthread_join failed");
+        }
+    }
+    clearFrames();
 
-	RETURN(0, int);
+    RETURN(0, int);
 }
 
 void ImageProcessor::setResultFrameType(const int &result_frame_type) {
-	ENTER();
+    ENTER();
 
 // if you want to pass some parameters while image processing,
 // you should do access control like here.
-	Mutex::Autolock lock(mMutex);
+    Mutex::Autolock lock(mMutex);
 
-	mResultFrameType = result_frame_type % RESULT_FRAME_TYPE_MAX;
+    mResultFrameType = result_frame_type % RESULT_FRAME_TYPE_MAX;
 
-	EXIT();
+    EXIT();
 };
 
 
 /** static member thread function */
 /*private*/
 void *ImageProcessor::processor_thread_func(void *vptr_args) {
-	ENTER();
+    ENTER();
 
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(vptr_args);
-	if (LIKELY(processor)) {
-		// attach to JavaVM so that ImageProcessor can call method(s) on Java class
-		JavaVM *vm = getVM();
-		CHECK(vm);
-		JNIEnv *env;
-		vm->AttachCurrentThread(&env, NULL);
-		CHECK(env);
-		processor->do_process(env);
-		LOGD("image processing loop finished, detach from JavaVM");
-		vm->DetachCurrentThread();
-		LOGD("detach finished");
-	}
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(vptr_args);
+    if (LIKELY(processor)) {
+        // attach to JavaVM so that ImageProcessor can call method(s) on Java class
+        JavaVM *vm = getVM();
+        CHECK(vm);
+        JNIEnv *env;
+        vm->AttachCurrentThread(&env, NULL);
+        CHECK(env);
+        processor->do_process(env);
+        LOGD("image processing loop finished, detach from JavaVM");
+        vm->DetachCurrentThread();
+        LOGD("detach finished");
+    }
 
-	PRE_EXIT();
-	pthread_exit(NULL);
+    PRE_EXIT();
+    pthread_exit(NULL);
 }
 
 /** actual member thread function */
 /*private*/
 void ImageProcessor::do_process(JNIEnv *env) {
-	ENTER();
+    ENTER();
 
-	cv::Mat src, result;
-	long last_queued_time_ms;
+    cv::Mat src, result;
+    long last_queued_time_ms;
 
-	for ( ; mIsRunning ; ) {
-		// wait for image
-		cv::Mat frame = getFrame(last_queued_time_ms);
-		if (UNLIKELY(!mIsRunning)) break;
-		if (LIKELY(!frame.empty())) {
-			try {
+    for (; mIsRunning;) {
+        // wait for image
+        cv::Mat frame = getFrame(last_queued_time_ms);
+        if (UNLIKELY(!mIsRunning)) break;
+        if (LIKELY(!frame.empty())) {
+            try {
 //--------------------------------------------------------------------------------
 // local copy
 // if you want to pass some parameters while image processing,
 // you should do access control like here.
-				int result_frame_type;
-				mMutex.lock();
-				{
-					result_frame_type = mResultFrameType;
-				}
-				mMutex.unlock();
+                int result_frame_type;
+                mMutex.lock();
+                {
+                    result_frame_type = mResultFrameType;
+                }
+                mMutex.unlock();
 //--------------------------------------------------------------------------------
 // do something you want
 // for a sample, convert to gray scale and return it as rgba here now.
-				switch (result_frame_type) {
-				default:
-
-					// convert to gray scale(RGBA->Y)
+	// convert to gray scale(RGBA->Y)
 					cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
 
-				    	cv::Canny(src, result, 50, 200, 3);
-                    							// perform hough
-                    							std::vector<cv::Vec2f> lines;
-                    							cv::HoughLines(result, lines, 1, 1.7444444, 100, 0, 0 );
-                    								for( size_t i = 0; i < lines.size(); i++ )
-                    								{
-                    									float rho = lines[i][0], theta = lines[i][1];
-                    									cv::Point pt1, pt2;
-                    									double a = cos(theta), b = sin(theta);
-                    									double x0 = a*rho, y0 = b*rho;
-                    									pt1.x = cvRound(x0 + 1000*(-b));
-                    									pt1.y = cvRound(y0 + 1000*(a));
-                    									pt2.x = cvRound(x0 - 1000*(-b));
-                    									pt2.y = cvRound(y0 - 1000*(a));
-                    									cv::line( result, pt1, pt2, cv::Scalar(0,0,255), 3, CV_AA);
-                    								}
-					// convert gray scale to rgba(for callback)
+                std::cout << "result_frame_type" << result_frame_type;
+                switch (result_frame_type) {
+                    case 0: {
+                        cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
+                        break;
+                    }
+                    // hough transform
+                    /*
+                    case 0: {
+                        cv::Canny(src, result, 25, 100, 3);
+                        std::vector <cv::Vec2f> lines;
+                        cv::HoughLines(result, lines, 1, 1.7444444444444, 100, 0, 0);
+                        for (size_t i = 0; i < lines.size(); i++) {
+                            float rho = lines[i][0], theta = lines[i][1];
+                            cv::Point pt1, pt2;
+                            double a = cos(theta), b = sin(theta);
+                            double x0 = a * rho, y0 = b * rho;
+                            pt1.x = cvRound(x0 + 1000 * (-b));
+                            pt1.y = cvRound(y0 + 1000 * (a));
+                            pt2.x = cvRound(x0 - 1000 * (-b));
+                            pt2.y = cvRound(y0 - 1000 * (a));
+                            cv::line(result, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
+                        }
+                        break;
+                    }
+                    */
+                        //P hough transform
+                    case 1: {
+
+                        cv::Canny(src, result, 25, 100, 3);
+                        std::vector <cv::Vec4i> lines;
+                        cv::HoughLinesP(result, lines, 1, 1.7444444444444, 50, 50, 10);
+                        for (size_t i = 0; i < lines.size(); i++) {
+                            cv::Vec4i l = lines[i];
+                            cv::line(result, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3,
+                                     cv::LINE_AA);
+                        }
+                        break;
+                    }
+
+
+                }
+                		// convert gray scale to rgba(for callback)
 					cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
-					break;
-				}
-				if (UNLIKELY(!mIsRunning)) break;
+                if (UNLIKELY(!mIsRunning)) break;
 //--------------------------------------------------------------------------------
 // call method on Java class
-				callJavaCallback(env, result, last_queued_time_ms);
+                callJavaCallback(env, result, last_queued_time_ms);
 //--------------------------------------------------------------------------------
-			} catch (cv::Exception e) {
-				LOGE("do_process failed:%s", e.msg.c_str());
-				continue;
-			} catch (...) {
-				LOGE("do_process unknown exception:");
-				break;
-			}
-			recycle(frame);
-		}
-	}
+            } catch (cv::Exception e) {
+                LOGE("do_process failed:%s", e.msg.c_str());
+                continue;
+            } catch (...) {
+                LOGE("do_process unknown exception:");
+                break;
+            }
+            recycle(frame);
+        }
+    }
 
-	EXIT();
+    EXIT();
 }
 
 #define RESULT_NUM 20
 
 /*private*/
 int ImageProcessor::callJavaCallback(JNIEnv *env, cv::Mat &result, const long &last_queued_time_ms) {
-	ENTER();
+    ENTER();
 
-	float detected[RESULT_NUM];
+    float detected[RESULT_NUM];
 
-	if (LIKELY(mIsRunning && fields.callFromNative && mClazz && mWeakThiz)) {
-		jfloatArray detected_array = env->NewFloatArray(RESULT_NUM);
-		env->SetFloatArrayRegion(detected_array, 0, RESULT_NUM, detected);
-		// result image
-		jobject buf_frame = env->NewDirectByteBuffer(result.data, result.total() * result.elemSize());
-		// call method on Java class
-		env->CallStaticVoidMethod(mClazz, fields.callFromNative, mWeakThiz, 0, buf_frame, detected_array);
-		env->ExceptionClear();
-		if (LIKELY(detected_array)) {
-			env->DeleteLocalRef(detected_array);
-		}
-		if (buf_frame) {
-			env->DeleteLocalRef(buf_frame);
-		}
-	}
+    if (LIKELY(mIsRunning && fields.callFromNative && mClazz && mWeakThiz)) {
+        jfloatArray detected_array = env->NewFloatArray(RESULT_NUM);
+        env->SetFloatArrayRegion(detected_array, 0, RESULT_NUM, detected);
+        // result image
+        jobject buf_frame = env->NewDirectByteBuffer(result.data, result.total() * result.elemSize());
+        // call method on Java class
+        env->CallStaticVoidMethod(mClazz, fields.callFromNative, mWeakThiz, 0, buf_frame, detected_array);
+        env->ExceptionClear();
+        if (LIKELY(detected_array)) {
+            env->DeleteLocalRef(detected_array);
+        }
+        if (buf_frame) {
+            env->DeleteLocalRef(buf_frame);
+        }
+    }
 
-	RETURN(0, int);
+    RETURN(0, int);
 }
 
 //********************************************************************************
 // register native method to Java class
 //********************************************************************************
-static void nativeClassInit(JNIEnv* env, jclass clazz) {
-	ENTER();
+static void nativeClassInit(JNIEnv *env, jclass clazz) {
+    ENTER();
 
-	fields.callFromNative = env->GetStaticMethodID(clazz, "callFromNative",
-         "(Ljava/lang/ref/WeakReference;ILjava/nio/ByteBuffer;[F)V");
-	if (UNLIKELY(!fields.callFromNative)) {
-		LOGW("can't find com.serenegiant.ImageProcessor#callFromNative");
-	}
-	env->ExceptionClear();
+    fields.callFromNative = env->GetStaticMethodID(clazz, "callFromNative",
+                                                   "(Ljava/lang/ref/WeakReference;ILjava/nio/ByteBuffer;[F)V");
+    if (UNLIKELY(!fields.callFromNative)) {
+        LOGW("can't find com.serenegiant.ImageProcessor#callFromNative");
+    }
+    env->ExceptionClear();
     jclass byteBufClass = env->FindClass("java/nio/ByteBuffer");
 
-	if (LIKELY(byteBufClass)) {
-		fields.arrayID = env->GetMethodID(byteBufClass, "array", "()[B");
-		if (!fields.arrayID) {
-			LOGE("Can't find java/nio/ByteBuffer#array");
-		}
-	} else {
-		LOGE("Can't find java/nio/ByteBuffer");
-	}
-	env->ExceptionClear();
+    if (LIKELY(byteBufClass)) {
+        fields.arrayID = env->GetMethodID(byteBufClass, "array", "()[B");
+        if (!fields.arrayID) {
+            LOGE("Can't find java/nio/ByteBuffer#array");
+        }
+    } else {
+        LOGE("Can't find java/nio/ByteBuffer");
+    }
+    env->ExceptionClear();
 
-	EXIT();
+    EXIT();
 }
 
 static ID_TYPE nativeCreate(JNIEnv *env, jobject thiz,
-	jobject weak_thiz_obj) {
+                            jobject weak_thiz_obj) {
 
-	ImageProcessor *processor = NULL;
+    ImageProcessor *processor = NULL;
 
-	jclass clazz = env->GetObjectClass(thiz);
-	if (LIKELY(clazz)) {
-		processor = new ImageProcessor(env, weak_thiz_obj, clazz);
-		setField_long(env, thiz, "mNativePtr", reinterpret_cast<ID_TYPE>(processor));
-	} else {
-		jniThrowRuntimeException(env, "can't find com.serenegiant.ImageProcessor");
-	}
+    jclass clazz = env->GetObjectClass(thiz);
+    if (LIKELY(clazz)) {
+        processor = new ImageProcessor(env, weak_thiz_obj, clazz);
+        setField_long(env, thiz, "mNativePtr", reinterpret_cast<ID_TYPE>(processor));
+    } else {
+        jniThrowRuntimeException(env, "can't find com.serenegiant.ImageProcessor");
+    }
 
-	RETURN(reinterpret_cast<ID_TYPE>(processor), ID_TYPE);
+    RETURN(reinterpret_cast<ID_TYPE>(processor), ID_TYPE);
 }
 
 static void nativeRelease(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native) {
+                          ID_TYPE id_native) {
 
-	ENTER();
+    ENTER();
 
-	setField_long(env, thiz, "mNativePtr", 0);
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		// terminating
-		processor->release(env);
-		SAFE_DELETE(processor);
-	}
+    setField_long(env, thiz, "mNativePtr", 0);
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        // terminating
+        processor->release(env);
+        SAFE_DELETE(processor);
+    }
 
-	EXIT();
+    EXIT();
 }
 
 static jint nativeStart(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native, jint width, jint height) {
+                        ID_TYPE id_native, jint width, jint height) {
 
-	ENTER();
+    ENTER();
 
-	jint result = -1;
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		result = processor->start(width, height);
-	}
+    jint result = -1;
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        result = processor->start(width, height);
+    }
 
-	RETURN(result, jint);
+    RETURN(result, jint);
 }
 
 static jint nativeStop(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native) {
+                       ID_TYPE id_native) {
 
-	ENTER();
+    ENTER();
 
-	jint result = -1;
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		result = processor->stop();
-	}
+    jint result = -1;
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        result = processor->stop();
+    }
 
-	RETURN(result, jint);
+    RETURN(result, jint);
 }
 
 static int nativeHandleFrame(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native, jint width, jint height, jint tex_name) {
+                             ID_TYPE id_native, jint width, jint height, jint tex_name) {
 
-	ENTER();
+    ENTER();
 
-	jint result = -1;
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		result = processor->handleFrame(width, height, tex_name);
-	}
+    jint result = -1;
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        result = processor->handleFrame(width, height, tex_name);
+    }
 
-	RETURN(result, jint);
+    RETURN(result, jint);
 }
 
 static jint nativeSetResultFrameType(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native, jint result_frame_type) {
+                                     ID_TYPE id_native, jint result_frame_type) {
 
-	ENTER();
+    ENTER();
 
-	jint result = -1;
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		processor->setResultFrameType(result_frame_type);
-		result = 0;
-	}
+    jint result = -1;
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        processor->setResultFrameType(result_frame_type);
+        result = 0;
+    }
 
-	RETURN(result, jint);
+    RETURN(result, jint);
 }
 
 static jint nativeGetResultFrameType(JNIEnv *env, jobject thiz,
-	ID_TYPE id_native) {
+                                     ID_TYPE id_native) {
 
-	ENTER();
+    ENTER();
 
-	jint result = 0;
-	ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
-	if (LIKELY(processor)) {
-		result = processor->getResultFrameType();
-	}
+    jint result = 0;
+    ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+    if (LIKELY(processor)) {
+        result = processor->getResultFrameType();
+    }
 
-	RETURN(result, jint);
+    RETURN(result, jint);
 }
 
 //================================================================================
 static JNINativeMethod methods[] = {
-	{ "nativeClassInit",			"()V",   (void*)nativeClassInit },
-	{ "nativeCreate",				"(Ljava/lang/ref/WeakReference;)J", (void *) nativeCreate },
-	{ "nativeRelease",				"(J)V", (void *) nativeRelease },
-	{ "nativeStart",				"(JII)I", (void *) nativeStart },
-	{ "nativeStop",					"(J)I", (void *) nativeStop },
-	{ "nativeHandleFrame",			"(JIII)I", (void *) nativeHandleFrame },
-	{ "nativeSetResultFrameType",	"(JI)I", (void *) nativeSetResultFrameType },
-	{ "nativeGetResultFrameType",	"(J)I", (void *) nativeGetResultFrameType },
+        {"nativeClassInit",          "()V",                              (void *) nativeClassInit},
+        {"nativeCreate",             "(Ljava/lang/ref/WeakReference;)J", (void *) nativeCreate},
+        {"nativeRelease",            "(J)V",                             (void *) nativeRelease},
+        {"nativeStart",              "(JII)I",                           (void *) nativeStart},
+        {"nativeStop",               "(J)I",                             (void *) nativeStop},
+        {"nativeHandleFrame",        "(JIII)I",                          (void *) nativeHandleFrame},
+        {"nativeSetResultFrameType", "(JI)I",                            (void *) nativeSetResultFrameType},
+        {"nativeGetResultFrameType", "(J)I",                             (void *) nativeGetResultFrameType},
 };
 
 
 int register_ImageProcessor(JNIEnv *env) {
-	if (registerNativeMethods(env,
-		"com/serenegiant/opencv/ImageProcessor",
-		methods, NUM_ARRAY_ELEMENTS(methods)) < 0) {
-		return -1;
-	}
-	return 0;
+    if (registerNativeMethods(env,
+                              "com/serenegiant/opencv/ImageProcessor",
+                              methods, NUM_ARRAY_ELEMENTS(methods)) < 0) {
+        return -1;
+    }
+    return 0;
 }
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -433,7 +453,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     // register native methods
     int result = register_ImageProcessor(env);
 
-	setVM(vm);
+    setVM(vm);
 
 #if LOCAL_DEBUG
     LOGD("JNI_OnLoad:finished:result=%d", result);

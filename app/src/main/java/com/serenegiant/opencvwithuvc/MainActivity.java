@@ -211,18 +211,48 @@ public final class MainActivity extends BaseActivity
 					}
 				}
 				break;
-			case R.id.brightness_button:
-				showSettings(UVCCamera.PU_BRIGHTNESS);
-				break;
-			case R.id.contrast_button:
-				showSettings(UVCCamera.PU_CONTRAST);
-				break;
-			case R.id.reset_button:
-				resetSettings();
-				break;
+				case R.id.brightness_button:
+					showSettings(UVCCamera.PU_BRIGHTNESS);
+					break;
+				case R.id.contrast_button:
+					showSettings(UVCCamera.PU_CONTRAST);
+					break;
+				case R.id.reset_button:
+					changeProcessingType();
+					break;
+				case R.id.changeProcessType:
+					changeProcessingType();
+					break;
 			}
 		}
 	};
+
+	private void changeProcessingType()
+	{
+//		int value = 0;
+//		if(mImageProcessor.getResultFrameType() == 1 )
+//			value = 0;
+//		else
+//			value = 1;
+		mImageProcessor.setResultFrameType(1);
+//		stopPreview();
+		stopImageProcessor();
+		if (mPreviewSurfaceId != 0) {
+			mCameraHandler.removeSurface(mPreviewSurfaceId);
+			mPreviewSurfaceId = 0;
+		}
+
+		try {
+
+			Thread.sleep(2000);
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		startPreview();
+		resetSettings();
+
+	}
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
 		= new CompoundButton.OnCheckedChangeListener() {
@@ -450,6 +480,8 @@ public final class MainActivity extends BaseActivity
 		ViewAnimationHelper.fadeOut(mValueLayout, -1, 0, mViewAnimationListener);
 	}
 
+
+
 	/**
 	 * hide setting view
 	 * @param fadeOut
@@ -615,7 +647,8 @@ public final class MainActivity extends BaseActivity
 		if (mImageProcessor == null) {
 			mImageProcessor = new ImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT,	// src size
 				new MyImageProcessorCallback(processing_width, processing_height));	// processing size
-			mImageProcessor.start(processing_width, processing_height);	// processing size
+			mImageProcessor.setResultFrameType(0);
+			mImageProcessor.start(processing_width, processing_height);
 			final Surface surface = mImageProcessor.getSurface();
 			mImageProcessorSurfaceId = surface != null ? surface.hashCode() : 0;
 			if (mImageProcessorSurfaceId != 0) {
