@@ -23,7 +23,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.serenegiant.common.BaseActivity;
 import com.serenegiant.opencv.ImageProcessor;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.USBMonitor;
