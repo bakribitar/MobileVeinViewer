@@ -193,40 +193,43 @@ void ImageProcessor::do_process(JNIEnv *env) {
                     result_frame_type = mResultFrameType;
                 }
                 mMutex.unlock();
-//--------------------------------------------------------------------------------
-// do something you want
-// for a sample, convert to gray scale and return it as rgba here now.
-	// convert to gray scale(RGBA->Y)
-					cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
 
-                std::cout << "result_frame_type" << result_frame_type;
+                // convert to gray scale(RGBA->Y)
+                cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
+
                 switch (result_frame_type) {
                     case 0: {
-                        cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
+                        result = frame;
+//                        // convert gray scale to rgba(for callback)
+//                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
+//                        // convert gray scale to rgba(for callback)
+//                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
                         break;
                     }
-                    // hough transform
-                    /*
-                    case 0: {
-                        cv::Canny(src, result, 25, 100, 3);
-                        std::vector <cv::Vec2f> lines;
-                        cv::HoughLines(result, lines, 1, 1.7444444444444, 100, 0, 0);
-                        for (size_t i = 0; i < lines.size(); i++) {
-                            float rho = lines[i][0], theta = lines[i][1];
-                            cv::Point pt1, pt2;
-                            double a = cos(theta), b = sin(theta);
-                            double x0 = a * rho, y0 = b * rho;
-                            pt1.x = cvRound(x0 + 1000 * (-b));
-                            pt1.y = cvRound(y0 + 1000 * (a));
-                            pt2.x = cvRound(x0 - 1000 * (-b));
-                            pt2.y = cvRound(y0 - 1000 * (a));
-                            cv::line(result, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
+                        // hough transform
+
+                        case 1: {
+                            cv::Canny(src, result, 25, 100, 3);
+                            std::vector <cv::Vec2f> lines;
+                            cv::HoughLines(result, lines, 1, 1.7444444444444, 100, 0, 0);
+                            for (size_t i = 0; i < lines.size(); i++) {
+                                float rho = lines[i][0], theta = lines[i][1];
+                                cv::Point pt1, pt2;
+                                double a = cos(theta), b = sin(theta);
+                                double x0 = a * rho, y0 = b * rho;
+                                pt1.x = cvRound(x0 + 1000 * (-b));
+                                pt1.y = cvRound(y0 + 1000 * (a));
+                                pt2.x = cvRound(x0 - 1000 * (-b));
+                                pt2.y = cvRound(y0 - 1000 * (a));
+                                cv::line(result, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
+                                                        // convert gray scale to rgba(for callback)
+                                                    cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    */
+
                         //P hough transform
-                    case 1: {
+                    case 2: {
 
                         cv::Canny(src, result, 25, 100, 3);
                         std::vector <cv::Vec4i> lines;
@@ -236,13 +239,14 @@ void ImageProcessor::do_process(JNIEnv *env) {
                             cv::line(result, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3,
                                      cv::LINE_AA);
                         }
+                        // convert gray scale to rgba(for callback)
+                        cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
                         break;
                     }
 
 
                 }
-                		// convert gray scale to rgba(for callback)
-					cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
+
                 if (UNLIKELY(!mIsRunning)) break;
 //--------------------------------------------------------------------------------
 // call method on Java class

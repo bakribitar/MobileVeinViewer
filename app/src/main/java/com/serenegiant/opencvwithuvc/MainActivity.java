@@ -220,27 +220,23 @@ public final class MainActivity extends BaseActivity
 				case R.id.reset_button:
 					changeProcessingType();
 					break;
-				case R.id.changeProcessType:
-					changeProcessingType();
-					break;
+
 			}
 		}
 	};
 
 	private void changeProcessingType()
 	{
-//		int value = 0;
-//		if(mImageProcessor.getResultFrameType() == 1 )
-//			value = 0;
-//		else
-//			value = 1;
-		mImageProcessor.setResultFrameType(1);
+		int value = 0;
+		if(mImageProcessor.getResultFrameType() == 1 )
+			value = 2;
+		else
+			value = 1;
+
+		mImageProcessor.setResultFrameType(value);
 //		stopPreview();
-		stopImageProcessor();
-		if (mPreviewSurfaceId != 0) {
-			mCameraHandler.removeSurface(mPreviewSurfaceId);
-			mPreviewSurfaceId = 0;
-		}
+	//	stopImageProcessor();
+
 
 		try {
 
@@ -647,7 +643,6 @@ public final class MainActivity extends BaseActivity
 		if (mImageProcessor == null) {
 			mImageProcessor = new ImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT,	// src size
 				new MyImageProcessorCallback(processing_width, processing_height));	// processing size
-			mImageProcessor.setResultFrameType(0);
 			mImageProcessor.start(processing_width, processing_height);
 			final Surface surface = mImageProcessor.getSurface();
 			mImageProcessorSurfaceId = surface != null ? surface.hashCode() : 0;

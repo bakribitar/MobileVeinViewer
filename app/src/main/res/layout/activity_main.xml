@@ -10,6 +10,8 @@
 	tools:context=".MainActivity"
 	tools:ignore="MergeRootFrame,RtlHardcoded,RtlSymmetry,HardcodedText,ContentDescription">
 
+
+
 	<com.serenegiant.widget.UVCCameraTextureView
 		android:id="@+id/camera_view"
 		android:layout_width="wrap_content"
@@ -137,11 +139,4 @@
 			android:progress="50" />
 	</RelativeLayout>
 
-	<Button
-		android:id="@+id/changeProcessType"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_above="@+id/result_view"
-		android:layout_centerHorizontal="true"
-		android:text="Button" />
 </RelativeLayout>
