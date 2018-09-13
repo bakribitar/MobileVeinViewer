@@ -211,6 +211,21 @@ public class ImageProcessor {
 		}
 	}
 
+	public void setThreshold(final int threshold) {
+		final int result = nativeSetThreshold(mNativePtr, threshold);
+		if (result != 0) {
+			throw new IllegalStateException("nativeSetResultFrameType:result=" + result);
+		}
+	}
+
+	public int getThreshold() throws IllegalStateException {
+		final int result = nativeGetThreshold(mNativePtr);
+		if (result < 0) {
+			throw new IllegalStateException("nativeGetResultFrameType:result=" + result);
+		}
+		return result;
+	}
+
 	/**
 	 * get result image type
 	 * @return
@@ -473,4 +488,8 @@ public class ImageProcessor {
 	private static native int nativeSetResultFrameType(final long id_native,
 		final int showDetects);
 	private static native int nativeGetResultFrameType(final long id_native);
+	private static native int nativeSetThreshold (long id_native,
+	final int threshold);
+	private static native int nativeGetThreshold(final long id_native);
+
 }

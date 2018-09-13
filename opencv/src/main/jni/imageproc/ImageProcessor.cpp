@@ -145,6 +145,15 @@ void ImageProcessor::setResultFrameType(const int &result_frame_type) {
     EXIT();
 };
 
+void ImageProcessor::setThreshold(const int &threshold) {
+    Mutex::Autolock lock(mMutex);
+// check if value is valid
+    mThreshold = threshold;
+
+    EXIT();
+};
+
+
 
 /** static member thread function */
 /*private*/
@@ -194,43 +203,50 @@ void ImageProcessor::do_process(JNIEnv *env) {
                 }
                 mMutex.unlock();
 
+                 int threshold;
+                                mMutex.lock();
+                                {
+                                    threshold = mThreshold;
+                                }
+                                mMutex.unlock();
+
                 // convert to gray scale(RGBA->Y)
                 cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
 
                 switch (result_frame_type) {
                     case 0: {
 //                        // convert gray scale to rgba(for callback)
-                       cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
+                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
                         break;
                     }
                         // hough transform
-
-                        case 1: {
-                            cv::Canny(src, result, 25, 100, 3);
-                            std::vector <cv::Vec2f> lines;
-                            cv::HoughLines(result, lines, 1, 1.7444444444444, 100, 0, 0);
-                            for (size_t i = 0; i < lines.size(); i++) {
-                                float rho = lines[i][0], theta = lines[i][1];
-                                cv::Point pt1, pt2;
-                                double a = cos(theta), b = sin(theta);
-                                double x0 = a * rho, y0 = b * rho;
-                                pt1.x = cvRound(x0 + 1000 * (-b));
-                                pt1.y = cvRound(y0 + 1000 * (a));
-                                pt2.x = cvRound(x0 - 1000 * (-b));
-                                pt2.y = cvRound(y0 - 1000 * (a));
-                                cv::line(result, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
-                                                        // convert gray scale to rgba(for callback)
-                                                    cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
-                            }
-                            break;
+                        // to be deleted because of bad performance
+                    case 1: {
+                        cv::Canny(src, result, 25, 100, 3);
+                        std::vector <cv::Vec2f> lines;
+                        cv::HoughLines(result, lines, 1, 1.7444444444444, 100, 0, 0);
+                        for (size_t i = 0; i < lines.size(); i++) {
+                            float rho = lines[i][0], theta = lines[i][1];
+                            cv::Point pt1, pt2;
+                            double a = cos(theta), b = sin(theta);
+                            double x0 = a * rho, y0 = b * rho;
+                            pt1.x = cvRound(x0 + 1000 * (-b));
+                            pt1.y = cvRound(y0 + 1000 * (a));
+                            pt2.x = cvRound(x0 - 1000 * (-b));
+                            pt2.y = cvRound(y0 - 1000 * (a));
+                            cv::line(result, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
+                            // convert gray scale to rgba(for callback)
+                            cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
                         }
+                        break;
+                    }
 
                         //P hough transform
                     case 2: {
 
                         cv::Canny(src, result, 25, 100, 3);
                         std::vector <cv::Vec4i> lines;
-                        cv::HoughLinesP(result, lines, 1, 1.7444444444444, 50, 50, 10);
+                        cv::HoughLinesP(result, lines, 1, 1.7444444444444, threshold, 50, 10);
                         for (size_t i = 0; i < lines.size(); i++) {
                             cv::Vec4i l = lines[i];
                             cv::line(result, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3,
@@ -420,6 +436,34 @@ static jint nativeGetResultFrameType(JNIEnv *env, jobject thiz,
     RETURN(result, jint);
 }
 
+static jint nativeSetThreshold(JNIEnv *env, jobject thiz, ID_TYPE id_native, jint threshold) {
+
+                                  ENTER();
+
+                                  jint result = -1;
+                                  ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+                                  if (LIKELY(processor)) {
+                                      processor->setThreshold(threshold);
+                                      result = 0;
+                                  }
+
+                                  RETURN(result, jint);
+                              }
+
+                              static jint nativeGetThreshold(JNIEnv *env, jobject thiz,
+                                                                   ID_TYPE id_native) {
+
+                                  ENTER();
+
+                                  jint result = 0;
+                                  ImageProcessor *processor = reinterpret_cast<ImageProcessor *>(id_native);
+                                  if (LIKELY(processor)) {
+                                      result = processor->getThreshold();
+                                  }
+
+                                  RETURN(result, jint);
+                              }
+
 //================================================================================
 static JNINativeMethod methods[] = {
         {"nativeClassInit",          "()V",                              (void *) nativeClassInit},
@@ -430,6 +474,8 @@ static JNINativeMethod methods[] = {
         {"nativeHandleFrame",        "(JIII)I",                          (void *) nativeHandleFrame},
         {"nativeSetResultFrameType", "(JI)I",                            (void *) nativeSetResultFrameType},
         {"nativeGetResultFrameType", "(J)I",                             (void *) nativeGetResultFrameType},
+        {"nativeSetThreshold", "(JI)I",                                  (void *) nativeSetThreshold},
+        {"nativeGetThreshold", "(J)I",                                   (void *) nativeGetThreshold},
 };
 
 

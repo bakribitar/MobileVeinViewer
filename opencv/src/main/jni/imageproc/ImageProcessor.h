@@ -38,6 +38,7 @@ private:
 	jclass mClazz;
 	volatile bool mIsRunning;
 	int mResultFrameType;
+	int mThreshold;
 
 	mutable Mutex mMutex;
 	Condition mSync;
@@ -55,4 +56,6 @@ public:
 	inline const bool isRunning() const { return mIsRunning; };
 	void setResultFrameType(const int &result_frame_type);
 	inline const int getResultFrameType() const { return mResultFrameType; };
+	void setThreshold(const int &threshold);
+	inline const int getThreshold() const { return mThreshold; };
 };

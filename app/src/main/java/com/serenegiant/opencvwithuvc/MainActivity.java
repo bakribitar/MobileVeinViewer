@@ -222,7 +222,7 @@ public final class MainActivity extends BaseActivity
 					showSettings(UVCCamera.PU_CONTRAST);
 					break;
 				case R.id.hough_button:
-					changeProcessingType();
+					showSettings(Constants.HOUGH);
 					break;
 				case R.id.reset_button:
 					resetSettings();
@@ -244,6 +244,15 @@ public final class MainActivity extends BaseActivity
 
 		startPreview();
 
+	}
+
+	private void startPHough(int threshold)
+	{
+
+		mImageProcessor.setResultFrameType(Constants.HOUGH);
+		mImageProcessor.setThreshold(threshold);
+
+//		startPreview();
 	}
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
@@ -454,13 +463,17 @@ public final class MainActivity extends BaseActivity
 		if (DEBUG) Log.v(TAG, String.format("showSettings:%08x", mode));
 		hideSetting(false);
 		if (isActive()) {
+			mSettingMode = mode;
 			switch (mode) {
 			case UVCCamera.PU_BRIGHTNESS:
 			case UVCCamera.PU_CONTRAST:
-				mSettingMode = mode;
 				mSettingSeekbar.setProgress(getValue(mode));
 				ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
 				break;
+				case Constants.HOUGH:
+					mSettingSeekbar.setProgress(mImageProcessor.getThreshold());
+					ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
+
 			}
 		}
 	}
@@ -469,6 +482,7 @@ public final class MainActivity extends BaseActivity
 		if (isActive()) {
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_BRIGHTNESS));
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_CONTRAST));
+				mImageProcessor.setResultFrameType(Constants.NoProcess);
 				mResetButton.setVisibility(View.INVISIBLE);
 		}
 		ViewAnimationHelper.fadeOut(mValueLayout, -1, 0, mViewAnimationListener);
@@ -523,6 +537,7 @@ public final class MainActivity extends BaseActivity
 
 		@Override
 		public void onStartTrackingTouch(final SeekBar seekBar) {
+
 		}
 
 		@Override
@@ -539,6 +554,8 @@ public final class MainActivity extends BaseActivity
 						mResetButton.setVisibility(View.INVISIBLE);
 					break;
 				}
+					case Constants.HOUGH:
+						startPHough(seekBar.getProgress());
 				}
 			}	// if (active)
 		}
