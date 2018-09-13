@@ -236,7 +236,7 @@ public final class MainActivity extends BaseActivity
 	{
 		int value = 0;
 		if(mImageProcessor.getResultFrameType() == 0 )
-			value = 3;
+			value = 2;
 		else
 			value = 0;
 

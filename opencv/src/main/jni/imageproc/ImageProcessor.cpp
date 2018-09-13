@@ -199,11 +199,8 @@ void ImageProcessor::do_process(JNIEnv *env) {
 
                 switch (result_frame_type) {
                     case 0: {
-                        result = frame;
 //                        // convert gray scale to rgba(for callback)
-//                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
-//                        // convert gray scale to rgba(for callback)
-//                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
+                       cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
                         break;
                     }
                         // hough transform
