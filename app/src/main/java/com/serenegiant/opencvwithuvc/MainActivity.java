@@ -103,7 +103,7 @@ public final class MainActivity extends BaseActivity
 	private ImageButton mCaptureButton;
 
 	private View mBrightnessButton, mContrastButton;
-	private View mResetButton;
+	private View mResetButton, mHoughButton;
 	private View mToolsLayout, mValueLayout;
 	private SeekBar mSettingSeekbar;
 
@@ -116,8 +116,6 @@ public final class MainActivity extends BaseActivity
 	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		if (DEBUG) Log.v(TAG, "onCreate:");
-		Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-		setSupportActionBar(myToolbar);
 		setContentView(R.layout.activity_main);
 		mCameraButton = (ToggleButton)findViewById(R.id.camera_button);
 		mCameraButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
@@ -134,6 +132,8 @@ public final class MainActivity extends BaseActivity
 		mBrightnessButton = findViewById(R.id.brightness_button);
 		mBrightnessButton.setOnClickListener(mOnClickListener);
 		mContrastButton = findViewById(R.id.contrast_button);
+		mHoughButton = findViewById(R.id.hough_button);
+		mHoughButton.setOnClickListener(mOnClickListener);
 		mContrastButton.setOnClickListener(mOnClickListener);
 		mResetButton = findViewById(R.id.reset_button);
 		mResetButton.setOnClickListener(mOnClickListener);
@@ -194,11 +194,7 @@ public final class MainActivity extends BaseActivity
 		super.onDestroy();
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.menu, menu);
-		return true;
-	}
+
 	/**
 	 * event handler when click camera / capture button
 	 */
@@ -225,8 +221,11 @@ public final class MainActivity extends BaseActivity
 				case R.id.contrast_button:
 					showSettings(UVCCamera.PU_CONTRAST);
 					break;
-				case R.id.reset_button:
+				case R.id.hough_button:
 					changeProcessingType();
+					break;
+				case R.id.reset_button:
+					resetSettings();
 					break;
 
 			}
@@ -236,25 +235,14 @@ public final class MainActivity extends BaseActivity
 	private void changeProcessingType()
 	{
 		int value = 0;
-		if(mImageProcessor.getResultFrameType() == 1 )
-			value = 2;
+		if(mImageProcessor.getResultFrameType() == 0 )
+			value = 3;
 		else
-			value = 1;
+			value = 0;
 
 		mImageProcessor.setResultFrameType(value);
-//		stopPreview();
-	//	stopImageProcessor();
 
-
-		try {
-
-			Thread.sleep(2000);
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		startPreview();
-		resetSettings();
 
 	}
 
@@ -333,6 +321,8 @@ public final class MainActivity extends BaseActivity
 					}
 					mCaptureButton.setVisibility(View.VISIBLE);
 					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+
+
 				} catch (final Exception e) {
 					Log.w(TAG, e);
 				}

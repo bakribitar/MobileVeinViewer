@@ -43,12 +43,21 @@
 			android:layout_toRightOf="@+id/brightness_button"
 			android:text="contrast" />
 
+
+		<Button
+			android:id="@+id/hough_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="@dimen/horizontal_margin_half"
+			android:layout_marginTop="@dimen/vertical_margin"
+			android:layout_toRightOf="@+id/contrast_button"
+			android:text="Hough" />
+
 		<Button
 			android:id="@+id/reset_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:layout_toRightOf="@+id/contrast_button"
 			android:text="Reset"
 			android:visibility="invisible" />
 
