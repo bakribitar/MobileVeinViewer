@@ -8,5 +8,5 @@ class Constants {
     public static final int ADAPTIVE_THRESHOLD= 5;
     public static final int ADAPTIVE_THRESHOLD_MEDIAN_BLUR= 6;
 
-    public static final int DEFAULT_THRESHOLD = 50;
+    public static final int DEFAULT_THRESHOLD = 7;
 }

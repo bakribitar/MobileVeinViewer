@@ -6,26 +6,15 @@
         android:orderInCategory="200"
         android:title="@string/_adaptiveThresholdBlur"
         app:showAsAction="ifRoom"/>
-    <item
-        android:id="@+id/action_dog"
-        android:title="@string/_dog"
-        app:showAsAction="never"/>
-
-    <!-- Settings, should always be in the overflow -->
+       <!-- Settings, should always be in the overflow -->
     <item android:id="@+id/action_laplace"
         android:title="@string/_laplace"
         app:showAsAction="never"/>
-
-
-
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="200"
         android:title="@string/_settings"
         android:icon="@drawable/ic_settings_black_24dp"
         app:showAsAction="never"/>
-
-
-
 
 </menu>
