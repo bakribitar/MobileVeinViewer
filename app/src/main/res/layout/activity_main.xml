@@ -20,29 +20,41 @@
 		android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
 		/>
 
-	<RelativeLayout
+	<LinearLayout
 		android:id="@+id/tools_layout"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content">
+		android:layout_height="wrap_content" android:orientation="horizontal" >
 
 		<Button
 			android:id="@+id/brightness_button"
-			android:layout_width="wrap_content"
+			android:layout_width="50dp"
 			android:layout_height="wrap_content"
-			android:layout_alignParentLeft="true"
 			android:layout_marginLeft="@dimen/horizontal_margin_half"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:text="brightness" />
+			android:text="br" />
 
 		<Button
 			android:id="@+id/contrast_button"
+			android:layout_width="50dp"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="@dimen/horizontal_margin_half"
+			android:layout_marginTop="@dimen/vertical_margin"
+			android:text="cn" />
+		<Button
+			android:id="@+id/reset_button"
+			android:layout_width="50dp"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="@dimen/vertical_margin"
+			android:text="rst" />
+
+
+		<Button
+			android:id="@+id/adaptiveThreshold_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginLeft="@dimen/horizontal_margin_half"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:layout_toRightOf="@+id/brightness_button"
-			android:text="contrast" />
-
+			android:text="Adapt" />
 
 		<Button
 			android:id="@+id/hough_button"
@@ -50,18 +62,18 @@
 			android:layout_height="wrap_content"
 			android:layout_marginLeft="@dimen/horizontal_margin_half"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:layout_toRightOf="@+id/contrast_button"
 			android:text="Hough" />
 
 		<Button
-			android:id="@+id/reset_button"
+			android:id="@+id/laplace_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="@dimen/vertical_margin"
-			android:text="Reset"
-			android:visibility="invisible" />
+			android:text="Laplace" />
 
-	</RelativeLayout>
+
+
+	</LinearLayout>
 
 	<LinearLayout
 		android:layout_width="match_parent"

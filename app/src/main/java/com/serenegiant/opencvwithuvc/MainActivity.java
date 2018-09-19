@@ -1,3 +1,25 @@
+/*
+ *  UVCCamera
+ *  library and sample to access to UVC web camera on non-rooted Android device
+ *
+ * Copyright (c) 2014-2017 saki t_saki@serenegiant.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ *  All files in the folder are under this Apache License, Version 2.0.
+ *  Files in the libjpeg-turbo, libusb, libuvc, rapidjson folder
+ *  may have a different license, see the respective files.
+ */
 package com.serenegiant.opencvwithuvc;
 
 import android.animation.Animator;
@@ -12,6 +34,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -103,7 +126,7 @@ public final class MainActivity extends BaseActivity
 	private ImageButton mCaptureButton;
 
 	private View mBrightnessButton, mContrastButton;
-	private View mResetButton, mHoughButton;
+	private View mResetButton, mHoughButton, mLaplaceButton, mAdaptiveThresholdButton;
 	private View mToolsLayout, mValueLayout;
 	private SeekBar mSettingSeekbar;
 
@@ -117,6 +140,8 @@ public final class MainActivity extends BaseActivity
 		super.onCreate(savedInstanceState);
 		if (DEBUG) Log.v(TAG, "onCreate:");
 		setContentView(R.layout.activity_main);
+		Toolbar toolbar = (Toolbar)findViewById(R.id.my_toolbar);
+		setSupportActionBar(toolbar);
 		mCameraButton = (ToggleButton)findViewById(R.id.camera_button);
 		mCameraButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
 		mCaptureButton = (ImageButton)findViewById(R.id.capture_button);
@@ -128,12 +153,17 @@ public final class MainActivity extends BaseActivity
 		mUVCCameraView.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
 
 		mResultView = (SurfaceView)findViewById(R.id.result_view);
-		
+		mResultView.setOnLongClickListener(mOnLongClickListener);
+
 		mBrightnessButton = findViewById(R.id.brightness_button);
 		mBrightnessButton.setOnClickListener(mOnClickListener);
 		mContrastButton = findViewById(R.id.contrast_button);
 		mHoughButton = findViewById(R.id.hough_button);
 		mHoughButton.setOnClickListener(mOnClickListener);
+		mLaplaceButton = findViewById(R.id.laplace_button);
+		mLaplaceButton.setOnClickListener(mOnClickListener);
+        mAdaptiveThresholdButton = findViewById(R.id.adaptiveThreshold_button);
+        mAdaptiveThresholdButton.setOnClickListener(mOnClickListener);
 		mContrastButton.setOnClickListener(mOnClickListener);
 		mResetButton = findViewById(R.id.reset_button);
 		mResetButton.setOnClickListener(mOnClickListener);
@@ -194,6 +224,30 @@ public final class MainActivity extends BaseActivity
 		super.onDestroy();
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.menu, menu);
+		return true;
+	}
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		switch (id){
+		case R.id.action_dog:
+			mImageProcessor.setResultFrameType(Constants.DoG);
+			break;
+			case R.id.action_laplace:
+				mImageProcessor.setResultFrameType(Constants.LAPLACE);
+				break;
+
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
 
 	/**
 	 * event handler when click camera / capture button
@@ -221,38 +275,28 @@ public final class MainActivity extends BaseActivity
 				case R.id.contrast_button:
 					showSettings(UVCCamera.PU_CONTRAST);
 					break;
-				case R.id.hough_button:
-					showSettings(Constants.HOUGH);
-					break;
 				case R.id.reset_button:
 					resetSettings();
+					break;
+				case R.id.laplace_button:
+					showSettings(Constants.LAPLACE);
+					break;
+				case R.id.adaptiveThreshold_button:
+					mImageProcessor.setResultFrameType(Constants.ADAPTIVE_THRESHOLD);
 					break;
 
 			}
 		}
 	};
-
-	private void changeProcessingType()
-	{
-		int value = 0;
-		if(mImageProcessor.getResultFrameType() == 0 )
-			value = 2;
-		else
-			value = 0;
-
-		mImageProcessor.setResultFrameType(value);
-
-		startPreview();
-
-	}
-
 	private void startPHough(int threshold)
 	{
-
 		mImageProcessor.setResultFrameType(Constants.HOUGH);
 		mImageProcessor.setThreshold(threshold);
+	}
 
-//		startPreview();
+	private void startLaplacian()
+	{
+		mImageProcessor.setResultFrameType(Constants.LAPLACE);
 	}
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
@@ -281,7 +325,8 @@ public final class MainActivity extends BaseActivity
 		public boolean onLongClick(final View view) {
 			switch (view.getId()) {
 			case R.id.camera_view:
-				if (mCameraHandler.isOpened()) {
+			case R.id.result_view:
+					if (mCameraHandler.isOpened()) {
 					if (checkPermissionWriteExternalStorage()) {
 						mCameraHandler.captureStill();
 					}
@@ -330,6 +375,9 @@ public final class MainActivity extends BaseActivity
 					}
 					mCaptureButton.setVisibility(View.VISIBLE);
 					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+					mImageProcessor.setResultFrameType(Constants.NO_PROCESS);
+					mImageProcessor.setThreshold(Constants.DEFAULT_HOUGH_THRESHOLD);
+
 
 
 				} catch (final Exception e) {
@@ -465,25 +513,32 @@ public final class MainActivity extends BaseActivity
 		if (isActive()) {
 			mSettingMode = mode;
 			switch (mode) {
-			case UVCCamera.PU_BRIGHTNESS:
-			case UVCCamera.PU_CONTRAST:
-				mSettingSeekbar.setProgress(getValue(mode));
-				ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
-				break;
-				case Constants.HOUGH:
-					mSettingSeekbar.setProgress(mImageProcessor.getThreshold());
+				case UVCCamera.PU_BRIGHTNESS:
+				case UVCCamera.PU_CONTRAST:
+					mSettingSeekbar.setProgress(getValue(mode));
 					ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
+					break;
+				case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
+					mImageProcessor.setResultFrameType(Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR);
+					mSettingSeekbar.setProgress(mImageProcessor.getThreshold());
+					break;
+
+
 
 			}
 		}
+	}
+
+	private void startAdaptiveThreshold() {
+		mImageProcessor.setResultFrameType(Constants.ADAPTIVE_THRESHOLD);
+
 	}
 
 	private void resetSettings() {
 		if (isActive()) {
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_BRIGHTNESS));
 				mSettingSeekbar.setProgress(resetValue( UVCCamera.PU_CONTRAST));
-				mImageProcessor.setResultFrameType(Constants.NoProcess);
-				mResetButton.setVisibility(View.INVISIBLE);
+				mImageProcessor.setResultFrameType(Constants.NO_PROCESS);
 		}
 		ViewAnimationHelper.fadeOut(mValueLayout, -1, 0, mViewAnimationListener);
 	}
@@ -545,17 +600,13 @@ public final class MainActivity extends BaseActivity
 			runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
 			if (isActive() && checkSupportFlag(mSettingMode)) {
 				switch (mSettingMode) {
-				case UVCCamera.PU_BRIGHTNESS:
-				case UVCCamera.PU_CONTRAST: {
-					setValue(mSettingMode, seekBar.getProgress());
-					if(getValue(UVCCamera.PU_BRIGHTNESS) !=BRIGHTNESS_DEFAULT || getValue(UVCCamera.PU_CONTRAST)!=CONTRAST_DEFAULT)
-						mResetButton.setVisibility(View.VISIBLE);
-					else
-						mResetButton.setVisibility(View.INVISIBLE);
-					break;
-				}
-					case Constants.HOUGH:
-						startPHough(seekBar.getProgress());
+					case UVCCamera.PU_BRIGHTNESS:
+					case UVCCamera.PU_CONTRAST:
+						setValue(mSettingMode, seekBar.getProgress());
+						break;
+					case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
+						mImageProcessor.setThreshold(seekBar.getProgress());
+						break;
 				}
 			}	// if (active)
 		}

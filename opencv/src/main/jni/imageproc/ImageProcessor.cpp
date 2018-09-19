@@ -183,7 +183,7 @@ void *ImageProcessor::processor_thread_func(void *vptr_args) {
 void ImageProcessor::do_process(JNIEnv *env) {
     ENTER();
 
-    cv::Mat src, result;
+    cv::Mat src, result, temp1, temp2;
     long last_queued_time_ms;
 
     for (; mIsRunning;) {
@@ -203,12 +203,12 @@ void ImageProcessor::do_process(JNIEnv *env) {
                 }
                 mMutex.unlock();
 
-                 int threshold;
-                                mMutex.lock();
-                                {
-                                    threshold = mThreshold;
-                                }
-                                mMutex.unlock();
+                int threshold;
+                mMutex.lock();
+                {
+                    threshold = mThreshold;
+                }
+                mMutex.unlock();
 
                 // convert to gray scale(RGBA->Y)
                 cv::cvtColor(frame, src, cv::COLOR_RGBA2GRAY, 1);
@@ -244,16 +244,56 @@ void ImageProcessor::do_process(JNIEnv *env) {
                         //P hough transform
                     case 2: {
 
-                        cv::Canny(src, result, 25, 100, 3);
+                        cv::Canny(src, temp1, 25, 100, 3);
                         std::vector <cv::Vec4i> lines;
-                        cv::HoughLinesP(result, lines, 1, 1.7444444444444, threshold, 50, 10);
+                        cv::HoughLinesP(temp1, lines, 1, 1.7444444444444, threshold, 50, 10);
                         for (size_t i = 0; i < lines.size(); i++) {
                             cv::Vec4i l = lines[i];
-                            cv::line(result, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3,
+                            cv::line(temp1, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3,
                                      cv::LINE_AA);
                         }
                         // convert gray scale to rgba(for callback)
+                        cv::cvtColor(temp1, result, cv::COLOR_GRAY2RGBA);
+                        break;
+                    }
+
+                        //laplacian
+                    case 3: {
+                        cv::GaussianBlur(src, src, cv::Size(1, 1), 0, 0, cv::BORDER_DEFAULT);
+                        cv::Laplacian(src, result, CV_8U, 3, 1, 0, cv::BORDER_DEFAULT);
                         cv::cvtColor(result, result, cv::COLOR_GRAY2RGBA);
+                        break;
+                    }
+                        //DoG
+                    case 4: {
+                        cv::GaussianBlur(src, temp1, cv::Size(1, 1), 0, 0, cv::BORDER_DEFAULT);
+                        cv::GaussianBlur(src, temp2, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
+                        result = temp1 - temp2;
+                        break;
+                    }
+
+                        //Adaptive Threshold
+                    case 5: {
+
+
+                        cv::medianBlur(src, temp1, 5);
+                        cv::adaptiveThreshold(temp1, temp2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 91, 2);
+                        cv::cvtColor(temp2, result, cv::COLOR_GRAY2RGBA);
+
+
+                        break;
+                    }
+
+                        //Adaptive Threshold then median blur to get rid of small contours
+                    case 6: {
+
+
+                        cv::medianBlur(src, temp1, threshold);
+                        cv::adaptiveThreshold(temp1, temp2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 91, 2);
+                        cv::medianBlur(temp2, temp2, threshold);
+                        cv::cvtColor(temp2, result, cv::COLOR_GRAY2RGBA);
+
+
                         break;
                     }
 

@@ -36,7 +36,7 @@
 #define RESULT_FRAME_TYPE_DST 2
 #define RESULT_FRAME_TYPE_SRC_LINE 3
 #define RESULT_FRAME_TYPE_DST_LINE 4
-#define RESULT_FRAME_TYPE_MAX 5
+#define RESULT_FRAME_TYPE_MAX 10
 
 typedef struct Coeff4 {
 	float a, b, c, d;

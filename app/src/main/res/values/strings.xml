@@ -1,3 +1,10 @@
 <resources>
 	<string name="app_name">Vein Viewer</string>
+    <string name="_hough">Hough</string>
+    <string name="_laplace">Laplace</string>
+    <string name="_dog">DoG</string>
+    <string name="_adaptiveThreshold">Adaptive Threshold</string>
+    <string name="_adaptiveThresholdBlur">Adaptive Threshold Blur</string>
+    <string name="_settings">Settings</string>
+
 </resources>
