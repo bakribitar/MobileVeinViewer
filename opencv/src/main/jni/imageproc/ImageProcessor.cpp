@@ -288,10 +288,12 @@ void ImageProcessor::do_process(JNIEnv *env) {
                     case 6: {
 
 
-                        cv::medianBlur(src, temp1, threshold);
-                        cv::adaptiveThreshold(temp1, temp2, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 91, 2);
-                        cv::medianBlur(temp2, temp2, threshold);
-                        cv::cvtColor(temp2, result, cv::COLOR_GRAY2RGBA);
+                        if(threshold %2 ==0)
+                            threshold++;
+                        cv::medianBlur(src, src, threshold);
+                        cv::adaptiveThreshold(src, src, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 91, 2);
+                        cv::medianBlur(src, src, threshold);
+                        cv::cvtColor(src, result, cv::COLOR_GRAY2RGBA);
 
 
                         break;

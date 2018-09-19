@@ -64,14 +64,6 @@
 			android:layout_marginTop="@dimen/vertical_margin"
 			android:text="Hough" />
 
-		<Button
-			android:id="@+id/laplace_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="@dimen/vertical_margin"
-			android:text="Laplace" />
-
-
 
 	</LinearLayout>
 

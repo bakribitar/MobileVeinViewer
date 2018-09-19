@@ -98,7 +98,7 @@ public final class MainActivity extends BaseActivity
 
 	private static int BRIGHTNESS_DEFAULT = 50;
 	private static int CONTRAST_DEFAULT = 50;
-	protected static final int SETTINGS_HIDE_DELAY_MS = 2500;
+	protected static final int SETTINGS_HIDE_DELAY_MS = 5000;
 
 	/**
 	 * for accessing USB
@@ -126,7 +126,7 @@ public final class MainActivity extends BaseActivity
 	private ImageButton mCaptureButton;
 
 	private View mBrightnessButton, mContrastButton;
-	private View mResetButton, mHoughButton, mLaplaceButton, mAdaptiveThresholdButton;
+	private View mResetButton, mHoughButton, mAdaptiveThresholdButton;
 	private View mToolsLayout, mValueLayout;
 	private SeekBar mSettingSeekbar;
 
@@ -160,8 +160,6 @@ public final class MainActivity extends BaseActivity
 		mContrastButton = findViewById(R.id.contrast_button);
 		mHoughButton = findViewById(R.id.hough_button);
 		mHoughButton.setOnClickListener(mOnClickListener);
-		mLaplaceButton = findViewById(R.id.laplace_button);
-		mLaplaceButton.setOnClickListener(mOnClickListener);
         mAdaptiveThresholdButton = findViewById(R.id.adaptiveThreshold_button);
         mAdaptiveThresholdButton.setOnClickListener(mOnClickListener);
 		mContrastButton.setOnClickListener(mOnClickListener);
@@ -237,11 +235,14 @@ public final class MainActivity extends BaseActivity
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		switch (id){
-		case R.id.action_dog:
-			mImageProcessor.setResultFrameType(Constants.DoG);
-			break;
+			case R.id.action_dog:
+				mImageProcessor.setResultFrameType(Constants.DoG);
+				break;
 			case R.id.action_laplace:
 				mImageProcessor.setResultFrameType(Constants.LAPLACE);
+				break;
+			case R.id.action_adaptiveThreshold_Blur:
+				showSettings(Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR);
 				break;
 
 		}
@@ -278,26 +279,18 @@ public final class MainActivity extends BaseActivity
 				case R.id.reset_button:
 					resetSettings();
 					break;
-				case R.id.laplace_button:
-					showSettings(Constants.LAPLACE);
-					break;
 				case R.id.adaptiveThreshold_button:
 					mImageProcessor.setResultFrameType(Constants.ADAPTIVE_THRESHOLD);
+					break;
+				case R.id.hough_button:
+					mImageProcessor.setResultFrameType(Constants.HOUGH);
 					break;
 
 			}
 		}
 	};
-	private void startPHough(int threshold)
-	{
-		mImageProcessor.setResultFrameType(Constants.HOUGH);
-		mImageProcessor.setThreshold(threshold);
-	}
 
-	private void startLaplacian()
-	{
-		mImageProcessor.setResultFrameType(Constants.LAPLACE);
-	}
+
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
 		= new CompoundButton.OnCheckedChangeListener() {
@@ -376,8 +369,7 @@ public final class MainActivity extends BaseActivity
 					mCaptureButton.setVisibility(View.VISIBLE);
 					startImageProcessor(PREVIEW_WIDTH, PREVIEW_HEIGHT);
 					mImageProcessor.setResultFrameType(Constants.NO_PROCESS);
-					mImageProcessor.setThreshold(Constants.DEFAULT_HOUGH_THRESHOLD);
-
+					mImageProcessor.setThreshold(Constants.DEFAULT_THRESHOLD);
 
 
 				} catch (final Exception e) {
@@ -520,11 +512,16 @@ public final class MainActivity extends BaseActivity
 					break;
 				case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
 					mImageProcessor.setResultFrameType(Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR);
-					mSettingSeekbar.setProgress(mImageProcessor.getThreshold());
+					mSettingSeekbar.setMax(20);
+					int kSize = mImageProcessor.getThreshold();
+					if(kSize > 20) {
+						kSize = 20;
+						mImageProcessor.setThreshold(kSize);
+					}
+					mSettingSeekbar.setProgress(kSize);
+					ViewAnimationHelper.fadeIn(mValueLayout, -1, 0, mViewAnimationListener);
+
 					break;
-
-
-
 			}
 		}
 	}
@@ -593,6 +590,14 @@ public final class MainActivity extends BaseActivity
 		@Override
 		public void onStartTrackingTouch(final SeekBar seekBar) {
 
+			runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
+			if (isActive()) {
+				switch (mSettingMode) {
+					case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
+						mImageProcessor.setThreshold(seekBar.getProgress());
+						break;
+				}
+			}	// if (active)
 		}
 
 		@Override
@@ -604,9 +609,7 @@ public final class MainActivity extends BaseActivity
 					case UVCCamera.PU_CONTRAST:
 						setValue(mSettingMode, seekBar.getProgress());
 						break;
-					case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
-						mImageProcessor.setThreshold(seekBar.getProgress());
-						break;
+
 				}
 			}	// if (active)
 		}
