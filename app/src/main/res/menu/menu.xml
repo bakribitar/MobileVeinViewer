@@ -2,14 +2,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_adaptiveThreshold_Blur"
+        android:orderInCategory="200"
+        android:title="@string/_adaptiveThresholdBlur"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_dog"
         android:title="@string/_dog"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="never"/>
 
     <!-- Settings, should always be in the overflow -->
     <item android:id="@+id/action_laplace"
         android:title="@string/_laplace"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="never"/>
 
 
 
@@ -18,14 +23,8 @@
         android:orderInCategory="200"
         android:title="@string/_settings"
         android:icon="@drawable/ic_settings_black_24dp"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="never"/>
 
-    <item
-        android:id="@+id/action_adaptiveThreshold_Blur"
-        android:orderInCategory="200"
-        android:title="@string/_adaptiveThresholdBlur"
-        android:icon="@drawable/ic_settings_black_24dp"
-        app:showAsAction="ifRoom"/>
 
 
 

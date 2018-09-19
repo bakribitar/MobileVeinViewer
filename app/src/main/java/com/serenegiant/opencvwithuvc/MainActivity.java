@@ -590,14 +590,6 @@ public final class MainActivity extends BaseActivity
 		@Override
 		public void onStartTrackingTouch(final SeekBar seekBar) {
 
-			runOnUiThread(mSettingHideTask, SETTINGS_HIDE_DELAY_MS);
-			if (isActive()) {
-				switch (mSettingMode) {
-					case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
-						mImageProcessor.setThreshold(seekBar.getProgress());
-						break;
-				}
-			}	// if (active)
 		}
 
 		@Override
@@ -612,6 +604,13 @@ public final class MainActivity extends BaseActivity
 
 				}
 			}	// if (active)
+			if (isActive()) {
+				switch (mSettingMode) {
+					case Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR:
+						mImageProcessor.setThreshold(seekBar.getProgress());
+						break;
+				}
+			}
 		}
 	};
 
