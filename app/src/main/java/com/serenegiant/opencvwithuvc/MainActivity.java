@@ -23,12 +23,21 @@
 package com.serenegiant.opencvwithuvc;
 
 import android.animation.Animator;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.usb.UsbDevice;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +53,7 @@ import android.view.View.OnLongClickListener;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -62,8 +72,7 @@ import com.serenegiant.widget.UVCCameraTextureView;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
-public final class MainActivity extends BaseActivity
-	implements CameraDialog.CameraDialogParent {
+public final class MainActivity extends BaseActivity implements SensorEventListener, CameraDialog.CameraDialogParent {
 	
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MainActivity";
@@ -130,10 +139,16 @@ public final class MainActivity extends BaseActivity
 	private View mToolsLayout, mValueLayout;
 	private SeekBar mSettingSeekbar;
 
+	private Switch mAlarmSettingButton;
+	private Ringtone mRingtone;
+	private Uri mNotification;
+	private boolean alarmEnabled = false;
+
 	protected ImageProcessor mImageProcessor;
 	private TextView mCpuLoadTv;
 	private TextView mFpsTv;
 	private final CpuMonitor cpuMonitor = new CpuMonitor();
+	private SensorManager mSensorManager;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -147,6 +162,7 @@ public final class MainActivity extends BaseActivity
 		mCaptureButton = (ImageButton)findViewById(R.id.capture_button);
 		mCaptureButton.setOnClickListener(mOnClickListener);
 		mCaptureButton.setVisibility(View.INVISIBLE);
+		mAlarmSettingButton = (Switch) findViewById(R.id.alarmSwitch);
 		
 		mUVCCameraView = (UVCCameraTextureView)findViewById(R.id.camera_view);
 		mUVCCameraView.setOnLongClickListener(mOnLongClickListener);
@@ -179,10 +195,29 @@ public final class MainActivity extends BaseActivity
 		mFpsTv = (TextView)findViewById(R.id.fps_textview);
 		mFpsTv.setText(null);
 		mFpsTv.setTypeface(Typeface.MONOSPACE);
+		 mNotification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		 mRingtone = RingtoneManager.getRingtone(getApplicationContext(), mNotification);
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
 		mCameraHandler = UVCCameraHandlerMultiSurface.createHandler(this, mUVCCameraView,
 			USE_SURFACE_ENCODER ? 0 : 1, PREVIEW_WIDTH, PREVIEW_HEIGHT, PREVIEW_MODE);
+
+		mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+		mSensorManager.registerListener(this,
+				mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+				SensorManager.SENSOR_DELAY_GAME);
+
+		mAlarmSettingButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if (isChecked) {
+                      alarmEnabled = true;
+				} else {
+                       alarmEnabled = false;
+				}
+			}
+		});
+
 	}
 
 	@Override
@@ -228,26 +263,29 @@ public final class MainActivity extends BaseActivity
 		getMenuInflater().inflate(R.menu.menu, menu);
 		return true;
 	}
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		if(mIsRunning)
-		{
-		int id = item.getItemId();
-		switch (id){
-			case R.id.action_laplace:
-				mImageProcessor.setResultFrameType(Constants.LAPLACE);
-				break;
-			case R.id.action_adaptiveThreshold_Blur:
-				showSettings(Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR);
-				break;
-		}
+		if (mIsRunning) {
+			int id = item.getItemId();
+			switch (id) {
+				case R.id.action_laplace:
+					mImageProcessor.setResultFrameType(Constants.LAPLACE);
+					break;
+				case R.id.action_adaptiveThreshold_Blur:
+					showSettings(Constants.ADAPTIVE_THRESHOLD_MEDIAN_BLUR);
+					break;
+
+			}
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
+
+
 
 	/**
 	 * event handler when click camera / capture button
@@ -290,6 +328,25 @@ public final class MainActivity extends BaseActivity
 	};
 
 
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		int type = event.sensor.getType();
+		if (type == Sensor.TYPE_ACCELEROMETER) {
+			float gz = event.values[2];
+
+			if(gz<0 && ! mRingtone.isPlaying() && alarmEnabled )
+
+				mRingtone.play();
+		}
+	}
+
+
+
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// TODO Auto-generated method stub
+	}
 
 	private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener
 		= new CompoundButton.OnCheckedChangeListener() {
