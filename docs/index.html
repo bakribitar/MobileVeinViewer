@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MobileVeinViewer — Vein Visualization on Android</title>
+  <meta name="description" content="A low-cost, non-invasive vein viewing system on Android smartphones using near-infrared imaging and real-time OpenCV image processing. Master's thesis project at TU München." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-deep:   #0d3b6e;
+      --blue-mid:    #1a6ab1;
+      --blue-light:  #3a8fd6;
+      --blue-pale:   #e8f3fc;
+      --teal:        #0097a7;
+      --white:       #ffffff;
+      --grey-bg:     #f4f7fb;
+      --grey-border: #dce6f0;
+      --text-dark:   #0f1f33;
+      --text-mid:    #3d5166;
+      --text-light:  #6b829a;
+      --radius:      10px;
+      --shadow:      0 4px 24px rgba(13, 59, 110, 0.10);
+      --shadow-hover:0 8px 32px rgba(13, 59, 110, 0.18);
+      --font-sans:   'Inter', system-ui, sans-serif;
+      --font-serif:  'DM Serif Display', Georgia, serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--text-dark);
+      background: var(--grey-bg);
+      line-height: 1.6;
+    }
+
+    a { color: var(--blue-mid); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+
+    /* ── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--grey-border);
+      padding: 0 clamp(1.5rem, 5vw, 4rem);
+    }
+    .nav-inner {
+      max-width: 1120px; margin: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-brand {
+      font-weight: 700; font-size: 1rem;
+      color: var(--blue-deep); letter-spacing: -0.3px;
+    }
+    .nav-links {
+      display: flex; gap: 1.75rem; list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-mid); transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--blue-mid); text-decoration: none; }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--blue-deep) 0%, #0f5ea0 55%, var(--blue-light) 100%);
+      color: var(--white);
+      padding: clamp(3.5rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-inner { position: relative; max-width: 820px; margin: auto; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem; font-weight: 500;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.3px;
+    }
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.5px;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      opacity: 0.88;
+      max-width: 640px;
+      margin: 0 auto 2.2rem;
+      font-weight: 300;
+    }
+    .hero-actions {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem; font-weight: 600;
+      transition: all .2s; cursor: pointer;
+      border: none;
+    }
+    .btn-white {
+      background: var(--white); color: var(--blue-deep);
+    }
+    .btn-white:hover { background: #e8f0f9; text-decoration: none; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.6);
+      color: var(--white);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.12); text-decoration: none; transform: translateY(-1px); }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: clamp(1.5rem, 4vw, 3rem);
+      flex-wrap: wrap;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .stat { text-align: center; }
+    .stat-val { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+    .stat-lbl { font-size: 0.78rem; opacity: 0.75; margin-top: 0.25rem; letter-spacing: 0.4px; text-transform: uppercase; }
+
+    /* ── Sections ─────────────────────────────────────────────── */
+    section { padding: clamp(3rem, 7vw, 5rem) clamp(1.5rem, 5vw, 4rem); }
+    .section-inner { max-width: 1120px; margin: auto; }
+
+    .section-label {
+      display: inline-block;
+      background: var(--blue-pale);
+      color: var(--blue-mid);
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.65rem, 4vw, 2.2rem);
+      color: var(--blue-deep);
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+    .section-lead {
+      font-size: 1.05rem;
+      color: var(--text-mid);
+      max-width: 680px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Problem ──────────────────────────────────────────────── */
+    .problem { background: var(--white); }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.25rem;
+    }
+    .problem-card {
+      background: var(--grey-bg);
+      border: 1px solid var(--grey-border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .problem-card-icon {
+      width: 40px; height: 40px;
+      background: var(--blue-pale);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 0.85rem;
+      font-size: 1.1rem;
+    }
+    .problem-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .problem-card p  { font-size: 0.85rem; color: var(--text-mid); line-height: 1.55; }
+
+    /* ── Solution ─────────────────────────────────────────────── */
+    .solution { background: var(--grey-bg); }
+
+    .solution-cols {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      align-items: start;
+    }
+    .solution-col h3 {
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--blue-deep);
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .solution-col h3 span {
+      background: var(--blue-deep);
+      color: var(--white);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+    }
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .spec-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--grey-border); }
+    .spec-table td:first-child { color: var(--text-light); width: 42%; }
+    .spec-table td:last-child  { font-weight: 500; }
+    .spec-table tr:last-child td { border-bottom: none; }
+
+    .circuit-img {
+      border-radius: var(--radius);
+      border: 1px solid var(--grey-border);
+      box-shadow: var(--shadow);
+      margin-top: 1.25rem;
+      width: 100%;
+    }
+
+    .nir-explanation {
+      background: var(--blue-pale);
+      border-left: 4px solid var(--blue-mid);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      margin-top: 1.25rem;
+      line-height: 1.65;
+    }
+
+    .modes-list { list-style: none; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .modes-list li {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      font-size: 0.9rem; background: var(--white);
+      border: 1px solid var(--grey-border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+    }
+    .mode-tag {
+      background: var(--blue-pale);
+      color: var(--blue-mid);
+      font-size: 0.72rem; font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .mode-desc { font-size: 0.875rem; color: var(--text-mid); }
+    .mode-desc strong { color: var(--text-dark); font-weight: 600; }
+
+    /* ── Gallery ──────────────────────────────────────────────── */
+    .gallery { background: var(--white); }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .gallery-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--grey-border);
+      box-shadow: var(--shadow);
+      background: var(--white);
+      transition: box-shadow .25s, transform .25s;
+      cursor: pointer;
+    }
+    .gallery-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+    .gallery-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #d0e3f5;
+    }
+    .gallery-card-body { padding: 1rem 1.25rem 1.25rem; }
+    .gallery-card-tag {
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 0.4rem;
+    }
+    .gallery-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .gallery-card p  { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; }
+
+    /* Lightbox */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(10, 25, 47, 0.88);
+      align-items: center; justify-content: center;
+      padding: 1.5rem;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-img {
+      max-width: min(90vw, 960px);
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: fixed; top: 1.25rem; right: 1.5rem;
+      color: white; font-size: 2rem; cursor: pointer;
+      background: none; border: none; line-height: 1;
+      opacity: 0.8;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-caption {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.6); color: white;
+      font-size: 0.85rem; padding: 0.5rem 1.2rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      max-width: 90vw; text-align: center;
+    }
+
+    /* ── Tech Stack ───────────────────────────────────────────── */
+    .tech { background: var(--grey-bg); }
+
+    .arch-box {
+      background: var(--blue-deep);
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre;
+      box-shadow: var(--shadow);
+    }
+
+    .tech-pills {
+      display: flex; flex-wrap: wrap; gap: 0.65rem;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--white);
+      border: 1px solid var(--grey-border);
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.82rem; font-weight: 500;
+      color: var(--text-dark);
+    }
+    .pill-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+
+    /* ── Academic ─────────────────────────────────────────────── */
+    .academic { background: var(--white); }
+
+    .academic-card {
+      background: linear-gradient(135deg, var(--blue-deep), #0e5299);
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: 2.5rem clamp(1.5rem, 4vw, 3rem);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .academic-card h3 {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .academic-card p { font-size: 0.9rem; opacity: 0.85; max-width: 520px; line-height: 1.65; }
+    .academic-meta {
+      display: flex; flex-direction: column; gap: 0.35rem;
+      margin-top: 1rem; font-size: 0.85rem; opacity: 0.9;
+    }
+    .academic-meta span::before { content: '⌁  '; opacity: 0.6; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      background: var(--blue-deep);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 2rem clamp(1.5rem, 5vw, 4rem);
+      font-size: 0.82rem;
+      line-height: 2;
+    }
+    footer a { color: rgba(255,255,255,0.85); }
+    footer a:hover { color: white; }
+    .footer-links {
+      display: flex; justify-content: center; gap: 1.5rem;
+      flex-wrap: wrap; margin-bottom: 0.75rem;
+    }
+    .footer-links a { font-weight: 500; font-size: 0.85rem; }
+
+    /* ── Responsive tweaks ────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero-stats { gap: 1.5rem; }
+      .arch-box { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <span class="nav-brand">MobileVeinViewer</span>
+    <ul class="nav-links">
+      <li><a href="#problem">Problem</a></li>
+      <li><a href="#solution">Solution</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#tech">Technology</a></li>
+      <li><a href="https://github.com/bakribitar/MobileVeinViewer" target="_blank">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      🎓 &nbsp;Master's Thesis · TU München · 2018
+    </div>
+    <h1>Vein Visualization on<br>Android Smartphones</h1>
+    <p class="hero-subtitle">
+      A low-cost, non-invasive system that uses near-infrared light and real-time OpenCV image processing
+      to help healthcare workers locate superficial veins — all on an ordinary Android phone.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/bakribitar/MobileVeinViewer" class="btn btn-white" target="_blank">
+        ⬡ &nbsp;App Repository
+      </a>
+      <a href="https://github.com/bakribitar/MobileVeinViewer-Thesis" class="btn btn-outline" target="_blank">
+        📄 &nbsp;Read the Thesis
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">&lt; €30</div><div class="stat-lbl">Hardware Cost</div></div>
+      <div class="stat"><div class="stat-val">940 nm</div><div class="stat-lbl">NIR Wavelength</div></div>
+      <div class="stat"><div class="stat-val">Real-time</div><div class="stat-lbl">Frame Processing</div></div>
+      <div class="stat"><div class="stat-val">No Root</div><div class="stat-lbl">Required</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ PROBLEM ════════════════════════════════════ -->
+<section class="problem" id="problem">
+  <div class="section-inner">
+    <span class="section-label">The Problem</span>
+    <h2 class="section-title">Venepuncture is harder than it looks</h2>
+    <p class="section-lead">
+      Finding the right vein is a prerequisite for blood draws, IV therapy, and cannulation.
+      Standard practice relies entirely on surface anatomy and operator experience —
+      with success rates dropping below 50% in difficult patient populations.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-card-icon">💉</div>
+        <h3>Failed Attempts</h3>
+        <p>On average, difficult patients require 3 needle sticks per vessel. Each failure increases the risk of bruising, nerve damage, and arterial puncture.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-card-icon">👁️</div>
+        <h3>Invisible Veins</h3>
+        <p>Patients with dark skin, high body weight, age-related changes, or conditions like scleroderma make visual identification nearly impossible.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-card-icon">💰</div>
+        <h3>Expensive Devices</h3>
+        <p>Dedicated vein viewers exist and work well, but their advanced hardware makes them unaffordable for many clinics in developing countries.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-card-icon">⚕️</div>
+        <h3>Real Clinical Risk</h3>
+        <p>Accidental arterial puncture, phlebitis, hematoma, and peripheral nerve damage are all documented complications of misplaced venepuncture.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ SOLUTION ════════════════════════════════════ -->
+<section class="solution" id="solution">
+  <div class="section-inner">
+    <span class="section-label">The Solution</span>
+    <h2 class="section-title">Two components. One affordable system.</h2>
+    <p class="section-lead">
+      MobileVeinViewer pairs a custom-built hardware extension with an Android application
+      to deliver real-time vein visualization anywhere a smartphone can go.
+    </p>
+
+    <div class="solution-cols">
+      <!-- Hardware -->
+      <div class="solution-col">
+        <h3><span>1</span> Hardware Extension</h3>
+        <table class="spec-table">
+          <tr><td>NIR LEDs</td><td>8 × SD-AR512C9, 940 nm, 40 mA each</td></tr>
+          <tr><td>Camera</td><td>Modified webcam (IR-Cut → IR-Pass filter)</td></tr>
+          <tr><td>Connection</td><td>USB OTG cable — data + power (≤ 500 mA)</td></tr>
+          <tr><td>Control</td><td>Stepless variable resistor for LED brightness</td></tr>
+          <tr><td>Total cost</td><td>&lt; €30</td></tr>
+        </table>
+        <img class="circuit-img" src="images/hardware_circuit.jpg" alt="LEDs grid and NIR camera circuit" />
+        <p class="nir-explanation">
+          <strong>Why 940 nm?</strong> NIR light at this wavelength penetrates the epidermis but is
+          strongly absorbed by oxyhaemoglobin in red blood cells.
+          Surrounding tissue reflects it — creating a high-contrast dark pattern
+          exactly where the veins are.
+        </p>
+      </div>
+
+      <!-- Software -->
+      <div class="solution-col">
+        <h3><span>2</span> Android Application</h3>
+        <p style="font-size:0.9rem; color:var(--text-mid); margin-bottom:1rem; line-height:1.65">
+          The app receives the NIR video stream via a UVC camera library and runs
+          each frame through an OpenCV-powered C++ image processing pipeline
+          via Android JNI — all in real time.
+        </p>
+        <ul class="modes-list">
+          <li>
+            <span class="mode-tag">Mode 1</span>
+            <span class="mode-desc"><strong>Raw NIR</strong> — Direct camera output with no processing. Delivers good contrast on light-skinned patients with zero computational overhead.</span>
+          </li>
+          <li>
+            <span class="mode-tag">Mode 2</span>
+            <span class="mode-desc"><strong>Adaptive Thresholding</strong> — Local (mean or Gaussian) thresholding computes an individual threshold per pixel region, dramatically improving vein contrast on any skin tone.</span>
+          </li>
+          <li>
+            <span class="mode-tag">Mode 3</span>
+            <span class="mode-desc"><strong>Adaptive Threshold + Median Blur</strong> — Noise suppression via median filter applied after thresholding, preserving vein edges while removing artefacts.</span>
+          </li>
+        </ul>
+        <p class="nir-explanation" style="margin-top:1.25rem">
+          <strong>Safety:</strong> An accelerometer-based alarm triggers if the device is flipped upside down,
+          preventing direct NIR LED exposure to eyes.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ GALLERY / RESULTS ══════════════════════════ -->
+<section class="gallery" id="results">
+  <div class="section-inner">
+    <span class="section-label">Results</span>
+    <h2 class="section-title">Visualizing veins across skin types &amp; conditions</h2>
+    <p class="section-lead">
+      The system was validated on subjects with normal skin, tattooed skin, varying skin tones,
+      and challenging medical conditions. Click any image to enlarge.
+    </p>
+    <div class="gallery-grid">
+
+      <div class="gallery-card" onclick="openLightbox('images/raw_nir_male_arm.jpg', 'Fig 4.5 — Raw NIR image of a healthy male arm. Good vein contrast with no processing.')">
+        <img src="images/raw_nir_male_arm.jpg" alt="Raw NIR image — male arm" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Raw NIR</div>
+          <h4>Healthy Male Arm</h4>
+          <p>Raw NIR image showing clear vein structure with no image processing applied. Veins appear as dark channels against the lighter surrounding tissue.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/raw_nir_female_arm.jpg', 'Fig 4.6 — Raw NIR image of a healthy female arm. Lower contrast — a case where processing is needed.')">
+        <img src="images/raw_nir_female_arm.jpg" alt="Raw NIR image — female arm" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Raw NIR</div>
+          <h4>Healthy Female Arm</h4>
+          <p>Same setup, lower vein contrast in raw NIR mode — illustrating why adaptive thresholding is necessary for reliable clinical use.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/adaptive_threshold_median.jpg', 'Fig 4.12 — Left: Gaussian adaptive thresholding result. Right: after applying median filter with kernel size 4. Noise is reduced with no detail loss.')">
+        <img src="images/adaptive_threshold_median.jpg" alt="Adaptive thresholding vs median filter" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Image Processing</div>
+          <h4>Adaptive Threshold + Median Filter</h4>
+          <p>Before/after comparison: Gaussian adaptive thresholding (left) vs. with median blur applied (right). Noise is eliminated while vein structure is fully preserved.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/result_dark_skin.jpg', 'Fig 5.3 — Raw NIR image and adaptive thresholding result on skin type VI. Veins are clearly visualized despite high melanin levels.')">
+        <img src="images/result_dark_skin.jpg" alt="Result on dark skin (type VI)" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Skin Type VI</div>
+          <h4>Dark Skin — Robust Results</h4>
+          <p>Raw NIR image alongside the adaptive thresholding result on a high-melanin skin. Veins remain well-visualized — one of the key clinical advantages.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/result_light_skin.jpg', 'Fig 5.4 — Raw NIR image and adaptive thresholding result on skin type II.')">
+        <img src="images/result_light_skin.jpg" alt="Result on light skin (type II)" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Skin Type II</div>
+          <h4>Light Skin Baseline</h4>
+          <p>Raw NIR and processed result on lighter skin. Strong contrast achieved, confirming the system performs consistently across the full skin tone spectrum.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/scleroderma_nir.jpg', 'Fig 5.6 — NIR image and adaptive thresholding result on a scleroderma patient. Veins are visualized despite extreme skin hardening.')">
+        <img src="images/scleroderma_nir.jpg" alt="Scleroderma NIR result" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Medical Case — Scleroderma</div>
+          <h4>Visualizing Through Disease</h4>
+          <p>Result on a 56-year-old patient with advanced scleroderma — a condition so severe that venepuncture previously required 3–5 failed attempts each visit. Veins are clearly visualized with adaptive thresholding.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/scleroderma_visible.jpg', 'Fig 5.5 — Visible range image of a scleroderma patient\'s arm. No vein can be located visually. A failed needle mark is visible.')">
+        <img src="images/scleroderma_visible.jpg" alt="Scleroderma visible range" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Medical Case — Visible Light</div>
+          <h4>The Same Arm Without NIR</h4>
+          <p>Visible-light image of the scleroderma patient's arm. No vein is identifiable. A needle puncture mark from a prior failed attempt is visible on the hardened skin.</p>
+        </div>
+      </div>
+
+      <div class="gallery-card" onclick="openLightbox('images/tattoo_nir.jpg', 'Fig 5.1 — Density comparison between a visible light image and an NIR image of tattooed skin. NIR penetrates many pigment types.')">
+        <img src="images/tattoo_nir.jpg" alt="NIR through tattoo" loading="lazy" />
+        <div class="gallery-card-body">
+          <div class="gallery-card-tag">Tattooed Skin</div>
+          <h4>NIR Penetrates Tattoo Pigments</h4>
+          <p>Comparison of visible light vs. NIR imaging on tattooed skin. NIR light penetrates most ink colours (green, red, orange), enabling vein visualization through the tattoo.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TECH ════════════════════════════════════════ -->
+<section class="tech" id="tech">
+  <div class="section-inner">
+    <span class="section-label">Technology</span>
+    <h2 class="section-title">Architecture &amp; Tech Stack</h2>
+
+    <pre class="arch-box">USB Camera (UVC) ──► libuvccamera (JNI / libuvc) ──► UVCCameraHandlerMultiSurface
+                                                             │
+                                             ┌───────────────┴───────────────┐
+                                             ▼                               ▼
+                                      UVCCameraTextureView           ImageProcessor
+                                       (live preview)          (OpenGL → JNI / OpenCV C++)
+                                                                         │
+                                                                         ▼
+                                                                 SurfaceView result
+                                                           (vein-enhanced image overlay)</pre>
+
+    <div class="tech-pills">
+      <span class="pill"><span class="pill-dot" style="background:#3a7bd5"></span>Android (Java)</span>
+      <span class="pill"><span class="pill-dot" style="background:#f47c3c"></span>C++ / NDK</span>
+      <span class="pill"><span class="pill-dot" style="background:#50a14f"></span>OpenCV 3</span>
+      <span class="pill"><span class="pill-dot" style="background:#a626a4"></span>OpenGL ES 3.0</span>
+      <span class="pill"><span class="pill-dot" style="background:#e45649"></span>JNI Bridge</span>
+      <span class="pill"><span class="pill-dot" style="background:#0097a7"></span>libuvc</span>
+      <span class="pill"><span class="pill-dot" style="background:#986801"></span>libjpeg-turbo</span>
+      <span class="pill"><span class="pill-dot" style="background:#6b829a"></span>USB OTG / UVC</span>
+      <span class="pill"><span class="pill-dot" style="background:#3a7bd5"></span>MediaCodec / MediaMuxer</span>
+      <span class="pill"><span class="pill-dot" style="background:#50a14f"></span>Adaptive Thresholding</span>
+      <span class="pill"><span class="pill-dot" style="background:#a626a4"></span>Median Filter</span>
+      <span class="pill"><span class="pill-dot" style="background:#0097a7"></span>SurfaceView</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ACADEMIC ════════════════════════════════════ -->
+<section class="academic" id="academic">
+  <div class="section-inner">
+    <div class="academic-card">
+      <div>
+        <h3>Master's Thesis — TU München</h3>
+        <p>
+          This project was developed as a Master's thesis in Informatics at the
+          Technische Universität München, Department of Informatics, under the supervision
+          of Prof. Dr. Uwe Baumgarten. The full thesis covers the underlying physics,
+          hardware design, image processing methodology, and clinical validation in detail.
+        </p>
+        <div class="academic-meta">
+          <span>Author: Bakri Bitar</span>
+          <span>Supervisor: Prof. Dr. Uwe Baumgarten</span>
+          <span>Submitted: November 15, 2018</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <a href="https://github.com/bakribitar/MobileVeinViewer-Thesis" class="btn btn-white" target="_blank" style="white-space:nowrap">
+          📄 &nbsp;Read Full Thesis
+        </a>
+        <a href="https://github.com/bakribitar/MobileVeinViewer" class="btn btn-outline" target="_blank" style="white-space:nowrap">
+          ⬡ &nbsp;Source Code
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FOOTER ══════════════════════════════════════ -->
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/bakribitar/MobileVeinViewer" target="_blank">App Repository</a>
+    <a href="https://github.com/bakribitar/MobileVeinViewer-Thesis" target="_blank">Thesis Repository</a>
+    <a href="https://github.com/bakribitar" target="_blank">GitHub Profile</a>
+    <a href="https://github.com/saki4510t/OpenCVwithUVC" target="_blank">Based on OpenCVwithUVC</a>
+  </div>
+  <div>
+    App code based on <a href="https://github.com/saki4510t/OpenCVwithUVC" target="_blank">OpenCVwithUVC</a> by saki4510t, licensed under Apache 2.0.
+    &nbsp;·&nbsp; Thesis content © 2018 Bakri Bitar.
+  </div>
+</footer>
+
+<!-- ═══════════════ LIGHTBOX ════════════════════════════════════ -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="" />
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<script>
+  function openLightbox(src, caption) {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox-caption').textContent = caption;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(e) {
+    if (e && e.target !== document.getElementById('lightbox') && !e.target.classList.contains('lightbox-close')) return;
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox({}); });
+</script>
+
+</body>
+</html>
