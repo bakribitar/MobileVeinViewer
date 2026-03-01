@@ -77,7 +77,7 @@
     .hero {
       background: linear-gradient(135deg, var(--blue-deep) 0%, #0f5ea0 55%, var(--blue-light) 100%);
       color: var(--white);
-      padding: clamp(3.5rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+      padding: clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 5vw, 4rem);
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -333,6 +333,51 @@
       max-width: 90vw; text-align: center;
     }
 
+    /* ── Demo Video ────────────────────────────────────────────── */
+    .demo { background: var(--grey-bg); }
+
+    .studio-wrapper {
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .studio-media {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-hover);
+      border: 1px solid var(--grey-border);
+      background: #000;
+    }
+    .studio-media video,
+    .studio-media img {
+      width: 100%;
+      max-height: 480px;
+      display: block;
+      border-radius: var(--radius);
+      object-fit: contain;
+    }
+    .studio-controls {
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .studio-controls button {
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--grey-border);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .studio-controls button.active,
+    .studio-controls button:hover {
+      background: var(--blue-pale);
+    }
+
     /* ── Tech Stack ───────────────────────────────────────────── */
     .tech { background: var(--grey-bg); }
 
@@ -427,6 +472,7 @@
       <li><a href="#problem">Problem</a></li>
       <li><a href="#solution">Solution</a></li>
       <li><a href="#results">Results</a></li>
+      <li><a href="#demo">Demo</a></li>
       <li><a href="#tech">Technology</a></li>
       <li><a href="https://github.com/bakribitar/MobileVeinViewer" target="_blank">GitHub ↗</a></li>
     </ul>
@@ -436,15 +482,9 @@
 <!-- ═══════════════ HERO ═══════════════════════════════════════ -->
 <header class="hero">
   <div class="hero-inner">
-    <div class="hero-badge">
-      🎓 &nbsp;Master's Thesis · TU München · 2018
-    </div>
+
     <h1>Vein Visualization on<br>Android Smartphones</h1>
-    <p class="hero-subtitle">
-      A low-cost, non-invasive system that uses near-infrared light and real-time OpenCV image processing
-      to help healthcare workers locate superficial veins — all on an ordinary Android phone.
-    </p>
-    <div class="hero-actions">
+    <div class="hero-actions" style="margin-top:1.25rem">
       <a href="https://github.com/bakribitar/MobileVeinViewer" class="btn btn-white" target="_blank">
         ⬡ &nbsp;App Repository
       </a>
@@ -452,14 +492,33 @@
         📄 &nbsp;Read the Thesis
       </a>
     </div>
-    <div class="hero-stats">
-      <div class="stat"><div class="stat-val">&lt; €30</div><div class="stat-lbl">Hardware Cost</div></div>
-      <div class="stat"><div class="stat-val">940 nm</div><div class="stat-lbl">NIR Wavelength</div></div>
-      <div class="stat"><div class="stat-val">Real-time</div><div class="stat-lbl">Frame Processing</div></div>
-      <div class="stat"><div class="stat-val">No Root</div><div class="stat-lbl">Required</div></div>
-    </div>
   </div>
 </header>
+
+<!-- ═══════════════ DEMO VIDEO ═════════════════════════════════ -->
+<section class="demo" id="demo">
+  <div class="section-inner">
+    <span class="section-label">Live Demo</span>
+    <h2 class="section-title">See the system in action</h2>
+    <p class="section-lead">
+      Real-time vein visualization captured directly through the MobileVeinViewer app,
+      demonstrating NIR imaging and adaptive thresholding on a live subject.
+    </p>
+    <div class="studio-wrapper">
+      <div class="studio-media" id="studio-media">
+        <video controls preload="metadata" poster="" id="studio-video">
+          <source src="images/demo1.mp4" type="video/mp4" />
+          Your browser does not support the HTML5 video element.
+        </video>
+        <img src="images/device1.png" id="studio-image" style="display:none" alt="Device view" />
+      </div>
+      <div class="studio-controls">
+        <button id="show-video" class="active">Demo</button>
+        <button id="show-image">Attachment</button>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ═══════════════ PROBLEM ════════════════════════════════════ -->
 <section class="problem" id="problem">
@@ -644,6 +703,7 @@
   </div>
 </section>
 
+
 <!-- ═══════════════ TECH ════════════════════════════════════════ -->
 <section class="tech" id="tech">
   <div class="section-inner">
@@ -743,6 +803,28 @@
     document.body.style.overflow = '';
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox({}); });
+</script>
+
+<script>
+  // studio toggle handlers
+  const vidBtn = document.getElementById('show-video');
+  const imgBtn = document.getElementById('show-image');
+  const videoEl = document.getElementById('studio-video');
+  const imgEl = document.getElementById('studio-image');
+  if (vidBtn && imgBtn && videoEl && imgEl) {
+    vidBtn.addEventListener('click', () => {
+      vidBtn.classList.add('active');
+      imgBtn.classList.remove('active');
+      videoEl.style.display = 'block';
+      imgEl.style.display = 'none';
+    });
+    imgBtn.addEventListener('click', () => {
+      imgBtn.classList.add('active');
+      vidBtn.classList.remove('active');
+      videoEl.style.display = 'none';
+      imgEl.style.display = 'block';
+    });
+  }
 </script>
 
 </body>
